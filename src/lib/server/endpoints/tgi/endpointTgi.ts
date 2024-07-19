@@ -22,12 +22,13 @@ export const endpointTgiParametersSchema = z.object({
 			image: createImageProcessorOptionsValidator({
 				supportedMimeTypes: ["image/jpeg", "image/webp"],
 				preferredMimeType: "image/webp",
-				maxSizeInMB: 5,
-				maxWidth: 224,
-				maxHeight: 224,
+				maxSizeInMB: 10,
+				maxWidth: 576,
+				maxHeight: 576,
 			}),
 		})
 		.default({}),
+	userId: z.string().optional(),
 });
 
 export function endpointTgi(input: z.input<typeof endpointTgiParametersSchema>): Endpoint {
@@ -43,6 +44,7 @@ export function endpointTgi(input: z.input<typeof endpointTgiParametersSchema>):
 		tools,
 		toolResults,
 		isMultimodal,
+		userId,
 	}) => {
 		const messagesWithResizedFiles = await Promise.all(
 			messages.map((message) => prepareMessage(Boolean(isMultimodal), message, imageProcessor))
@@ -63,6 +65,7 @@ export function endpointTgi(input: z.input<typeof endpointTgiParametersSchema>):
 				model: url,
 				inputs: prompt,
 				accessToken,
+				userId,
 			},
 			{
 				use_cache: false,
@@ -94,7 +97,7 @@ async function prepareMessage(
 	message: EndpointMessage,
 	imageProcessor: ImageProcessor
 ): Promise<EndpointMessage> {
-	if (!isMultimodal) return message;
+	// if (!isMultimodal) return message;
 
 	const files = await Promise.all(message.files?.map(imageProcessor) ?? [whiteImage]);
 	const markdowns = files.map(
