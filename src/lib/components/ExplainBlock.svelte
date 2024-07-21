@@ -26,7 +26,7 @@
 		const scale = triggeredElement.width / triggeredElement.naturalWidth;
 		const x = Math.floor((event.clientX - rect.left) / scale); // x position within the element.
 		const y = Math.floor((event.clientY - rect.top) / scale); // y position within the element.
-		hoverMaskIndexes = checkPointInMask(maskTensor, shape, x, y);
+		hoverMaskIndexes = checkPointInMask(maskTensor, shape, x, y).slice(-1);
 	}
 	function handleMouseClick(event: MouseEvent) {
 		if (!event.target) return;
