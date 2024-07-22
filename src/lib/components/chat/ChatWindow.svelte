@@ -332,7 +332,7 @@
 
 		<div class="w-full">
 			<div class="flex w-full pb-3">
-				<div class="ml-auto gap-2">
+				<div class="ml-auto gap-2 flex flex-row">
 					<HelpBtn
 						classNames="ml-auto"
 						onclick={() => {
