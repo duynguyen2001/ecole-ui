@@ -9,7 +9,7 @@
 	import CarbonCaretDown from "~icons/carbon/caret-down";
 
 	import EosIconsLoading from "~icons/eos-icons/loading";
-	
+
 	import { fade } from "svelte/transition";
 	import ChatInput from "./ChatInput.svelte";
 	import StopGeneratingBtn from "../StopGeneratingBtn.svelte";
@@ -51,7 +51,7 @@
 	export let files: File[] = [];
 
 	$: isReadOnly = !models.some((model) => model.id === currentModel.id);
-	
+
 	let loginModalOpen = false;
 	let helpBoxModalOpen = false;
 	let message: string;
@@ -71,6 +71,7 @@
 		if (loading) return;
 		dispatch("message", message);
 		message = "";
+		helpBoxModalOpen = false;
 	};
 
 	let onDrag = false;
@@ -151,7 +152,6 @@
 		...(currentModel.multimodal ? ["image/*"] : []),
 	];
 
-
 	const onDragEnter = (e: DragEvent) => {
 		console.log("enter");
 		lastTarget = e.target;
@@ -160,11 +160,11 @@
 
 	const onDragDrop = (e: DragEvent) => {
 		console.log("drop");
-		if (DropZone){
+		if (DropZone) {
 			console.log("dropzone");
 			DropZone.dropHandle(e);
 		}
-	}
+	};
 
 	const onDragLeave = (e: DragEvent) => {
 		if (e.target === lastTarget) {
@@ -174,25 +174,24 @@
 
 	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
-	}
+	};
 
-	onMount(()=>{
-	if (typeof window !== 'undefined') {
-		window.addEventListener('dragenter', onDragEnter);
-		window.addEventListener('drop', onDragDrop);
-		window.addEventListener('dragover', onDragOver);
-		window.addEventListener('dragleave', onDragLeave);
-	}
-	})
-
+	onMount(() => {
+		if (typeof window !== "undefined") {
+			window.addEventListener("dragenter", onDragEnter);
+			window.addEventListener("drop", onDragDrop);
+			window.addEventListener("dragover", onDragOver);
+			window.addEventListener("dragleave", onDragLeave);
+		}
+	});
 
 	// Clean up event listeners on component destroy
 	onDestroy(() => {
-		if (typeof window !== 'undefined') {
-			window.addEventListener('dragenter', onDragEnter);
-			window.addEventListener('drop', onDragDrop);
-			window.addEventListener('dragover', onDragOver);
-			window.addEventListener('dragleave', onDragLeave);
+		if (typeof window !== "undefined") {
+			window.addEventListener("dragenter", onDragEnter);
+			window.addEventListener("drop", onDragDrop);
+			window.addEventListener("dragover", onDragOver);
+			window.addEventListener("dragleave", onDragLeave);
 		}
 	});
 
@@ -209,10 +208,11 @@
 	{/if}
 
 	{#if onDrag}
-    <div
-		in:fade={{duration: 200}}
-		out:fade={{duration: 200}}
-		class="fixed inset-0 w-100 h-100 bg-white bg-opacity-10 z-50"></div>
+		<div
+			in:fade={{ duration: 200 }}
+			out:fade={{ duration: 200 }}
+			class="fixed inset-0 w-100 h-100 bg-white bg-opacity-10 z-50"
+		></div>
 	{/if}
 
 	<div
@@ -332,34 +332,34 @@
 
 		<div class="w-full">
 			<div class="flex w-full pb-3">
-				{#if !assistant}
-					{#if currentModel.tools}
-						<ToolsMenu {loading} />
-					{:else if $page.data.settings?.searchEnabled}
-						<WebSearchToggle />
-					{/if}
-				{/if}
-				{#if loading}
-					<StopGeneratingBtn classNames="ml-auto" on:click={() => dispatch("stop")} />
-				{:else if lastIsError}
-					<RetryBtn
+				<div class="ml-auto gap-2">
+					<HelpBtn
 						classNames="ml-auto"
-						on:click={() => {
-							if (lastMessage && lastMessage.ancestors) {
-								dispatch("retry", {
-									id: lastMessage.id,
-								});
-							}
+						onclick={() => {
+							helpBoxModalOpen = !helpBoxModalOpen;
 						}}
 					/>
-				{:else}
-					<div class="ml-auto gap-2">
-						<HelpBtn
+					{#if !assistant}
+						{#if currentModel.tools}
+							<ToolsMenu {loading} />
+						{:else if $page.data.settings?.searchEnabled}
+							<WebSearchToggle />
+						{/if}
+					{/if}
+					{#if loading}
+						<StopGeneratingBtn classNames="ml-auto" on:click={() => dispatch("stop")} />
+					{:else if lastIsError}
+						<RetryBtn
 							classNames="ml-auto"
-							onclick={() => {
-								helpBoxModalOpen = !helpBoxModalOpen;
+							on:click={() => {
+								if (lastMessage && lastMessage.ancestors) {
+									dispatch("retry", {
+										id: lastMessage.id,
+									});
+								}
 							}}
 						/>
+					{:else}
 						{#if activeMimeTypes.length > 0}
 							<UploadBtn bind:files mimeTypes={activeMimeTypes} classNames="ml-auto" />
 						{/if}
@@ -374,8 +374,8 @@
 								}}
 							/>
 						{/if}
-					</div>
-				{/if}
+					{/if}
+				</div>
 			</div>
 			<form
 				tabindex="-1"
