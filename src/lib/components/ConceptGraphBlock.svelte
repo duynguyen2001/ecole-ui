@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { randomUUID } from "$lib/utils/randomUuid";
 	import * as d3 from "d3";
 	import dagreD3 from "dagre-d3";
-	import { randomUUID } from "$lib/utils/randomUuid";
+	import { onMount } from "svelte";
 
 	let new_id = "id-" + randomUUID();
+	export let json_data ;
 
 	const codeSample1 = `{
 "concepts": [
@@ -141,7 +142,21 @@
 
 	let codeSample = JSON.parse(codeSample1);
 
-	onMount(() => generateGraph());
+	// onMount(() => generateGraph());
+	onMount(() => {
+		console.log("json_data", json_data);
+		if (json_data && json_data.id) {
+			fetch("/json/" + json_data.id)
+				.then(res => res.json())
+				.then(data => {
+					codeSample = data;
+					generateGraph();
+				});
+		} else{
+			generateGraph();
+
+		}
+	});
 
 	function generateGraph() {
 		const g = new dagreD3.graphlib.Graph().setGraph({rankdir: 'TB', ranksep: 70});

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { afterUpdate } from "svelte";
-	import CopyToClipBoardBtn from "./CopyToClipBoardBtn.svelte";
-	import HorizontalBarCharts from "./d3figure/HorizontalBarCharts.svelte";
-	import DecisionTree from "./d3figure/DecisionTree.svelte";
-	import ImagesBlock from "./ImagesBlock.svelte";
-	import ExplainBlock from "./ExplainBlock.svelte";
 	import ConceptGraphBlock from "./ConceptGraphBlock.svelte";
+	import CopyToClipBoardBtn from "./CopyToClipBoardBtn.svelte";
+	import DecisionTree from "./d3figure/DecisionTree.svelte";
+	import HorizontalBarCharts from "./d3figure/HorizontalBarCharts.svelte";
+	import ExplainBlock from "./ExplainBlock.svelte";
+	import ImagesBlock from "./ImagesBlock.svelte";
 	function zip(arr1, arr2) {
 		let length = Math.min(arr1.length, arr2.length);
 		let result = [];
@@ -25,10 +25,11 @@
 		"collapsible-div",
 		"images",
 		"image-with-mask",
-		// "concept-graph",
+		"concept-graph",
 	];
 
 	$: highlightedCode = "";
+
 
 	afterUpdate(async () => {
 		const { default: hljs } = await import("highlight.js");
@@ -71,7 +72,7 @@
 {:else if lang == "image-with-mask"}
 	<ExplainBlock json_data={parsedParams} />
 {:else if lang == "concept-graph"}
-	<ConceptGraphBlock graph={parsedParams} />
+	<ConceptGraphBlock json_data={parsedParams} />
 {:else}
 	<div class="group relative my-4 rounded-lg">
 		<!-- eslint-disable svelte/no-at-html-tags -->
