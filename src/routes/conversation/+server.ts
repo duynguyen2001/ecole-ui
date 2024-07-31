@@ -11,11 +11,19 @@ import { v4 } from "uuid";
 import { authCondition } from "$lib/server/auth";
 import { usageLimits } from "$lib/server/usageLimits";
 import { MetricsServer } from "$lib/server/metrics";
+import { ECOLE_PASSWORD } from "$env/static/private";
 
-export const POST: RequestHandler = async ({ locals, request }) => {
+export const POST: RequestHandler = async ({ locals, request, url, cookies }) => {
 	const body = await request.text();
 
 	let title = "";
+
+	const ECOLE_password = cookies.get("ECOLE_password");
+	console.log("ECOLE_password", ECOLE_password);
+	if ((!ECOLE_password || ECOLE_password !== ECOLE_PASSWORD) && url.pathname !== "/password") {
+		console.log("Redirecting to password page");
+		throw redirect(307, `/password`);
+	}
 
 	const parsedBody = z
 		.object({

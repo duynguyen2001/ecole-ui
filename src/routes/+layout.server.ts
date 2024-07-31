@@ -10,11 +10,18 @@ import { ObjectId } from "mongodb";
 import type { ConvSidebar } from "$lib/types/ConvSidebar";
 import { allTools } from "$lib/server/tools";
 import { MetricsServer } from "$lib/server/metrics";
+import { ECOLE_PASSWORD } from "$env/static/private";
+import { redirect } from "@sveltejs/kit";
 
-export const load: LayoutServerLoad = async ({ locals, depends }) => {
+export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) => {
 	depends(UrlDependency.ConversationList);
 
 	const settings = await collections.settings.findOne(authCondition(locals));
+	const ECOLE_password = cookies.get("ECOLE_password");
+	if ((!ECOLE_password || ECOLE_password !== ECOLE_PASSWORD) && url.pathname !== "/password") {
+		console.log("Redirecting to password page");
+		throw redirect(307, `/password`);
+	}
 
 	// If the active model in settings is not valid, set it to the default model. This can happen if model was disabled.
 	if (
