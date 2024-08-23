@@ -26,6 +26,7 @@
 		"images",
 		"image-with-mask",
 		"concept-graph",
+		"hyperlink-images"
 	];
 
 	$: highlightedCode = "";
@@ -68,6 +69,10 @@
 {:else if lang == "images"}
 	<div class="w-min-[500px] group w-full">
 		<ImagesBlock json_data={parsedParams} />
+	</div>
+{:else if lang == "hyperlink-images"}
+	<div class="w-min-[500px] group w-full">
+		<ImagesBlock json_data={parsedParams} hyperlink={true} />
 	</div>
 {:else if lang == "image-with-mask"}
 	<ExplainBlock json_data={parsedParams} />
