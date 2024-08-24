@@ -44,7 +44,7 @@
 					alt={json_data.names[hoveredIndex]}
 					class="mb-2 h-auto max-w-full"
 				/>
-				<h5 class="text-lg">{json_data.names[index]}</h5>
+				<h5 class="text-lg">{json_data.names[hoveredIndex]}</h5>
 			</div>
 		{/if}
 	</div>
