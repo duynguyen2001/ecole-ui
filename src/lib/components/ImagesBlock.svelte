@@ -25,9 +25,8 @@
 		<div class="inline">
 			{#each json_data.names as name, index}
 				<span
-					class="text-blue-500 cursor-pointer"
-					on:mouseenter={() => handleMouseEnter(index)}
-					on:mouseleave={handleMouseLeave}
+					class={"text-blue-500 cursor-pointer" + (hoveredIndex === index ? " font-bold" : "")}
+					on:click={() => handleMouseEnter(index)}
 				>
 					{name}
 				</span>
