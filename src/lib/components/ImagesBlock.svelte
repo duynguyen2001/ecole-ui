@@ -10,13 +10,15 @@
 	let hoveredIndex = null;
 
 	// Function to handle when the mouse enters a hyperlink
-	function handleMouseEnter(index) {
-		hoveredIndex = index;
-	}
-
-	// Function to handle when the mouse leaves a hyperlink
-	function handleMouseLeave() {
-		hoveredIndex = null;
+	function handleClick(index) {
+		console.log("clicked on index", index);
+		console.log("hoveredIndex", hoveredIndex);
+		if (hoveredIndex !== null && hoveredIndex === index) {
+			console.log("clicked on the same index");
+			hoveredIndex = null;
+		} else {
+			hoveredIndex = index;
+		}
 	}
 </script>
 
@@ -26,7 +28,7 @@
 			{#each json_data.names as name, index}
 				<span
 					class={"text-blue-500 cursor-pointer" + (hoveredIndex === index ? " font-bold" : "")}
-					on:click={() => handleMouseEnter(index)}
+					on:click={() => handleClick(index)}
 				>
 					{name}
 				</span>
@@ -36,7 +38,7 @@
 			{/each}
 		</div>
 
-		{#if hoveredIndex !== null}
+		{#if hoveredIndex !== null && hoveredIndex < json_data.images.length}
 			<div class="flex flex-col items-center justify-center text-center">
 				<img
 					src={`${base}/images/${json_data.images[hoveredIndex]}`}
