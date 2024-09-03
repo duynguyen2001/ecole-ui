@@ -1,28 +1,28 @@
 import { env } from "$env/dynamic/private";
-import { startOfHour } from "date-fns";
 import { authCondition, requiresUser } from "$lib/server/auth";
 import { collections } from "$lib/server/database";
+import { uploadFile } from "$lib/server/files/uploadFile";
+import { MetricsServer } from "$lib/server/metrics";
 import { models } from "$lib/server/models";
+import { textGeneration } from "$lib/server/textGeneration";
+import type { TextGenerationContext } from "$lib/server/textGeneration/types";
+import { usageLimits } from "$lib/server/usageLimits";
 import { ERROR_MESSAGES } from "$lib/stores/errors";
 import type { Message } from "$lib/types/Message";
-import { error } from "@sveltejs/kit";
-import { ObjectId } from "mongodb";
-import { z } from "zod";
 import {
 	MessageUpdateStatus,
 	MessageUpdateType,
 	type MessageUpdate,
 } from "$lib/types/MessageUpdate";
-import { uploadFile } from "$lib/server/files/uploadFile";
-import { convertLegacyConversation } from "$lib/utils/tree/convertLegacyConversation";
-import { isMessageId } from "$lib/utils/tree/isMessageId";
-import { buildSubtree } from "$lib/utils/tree/buildSubtree.js";
 import { addChildren } from "$lib/utils/tree/addChildren.js";
 import { addSibling } from "$lib/utils/tree/addSibling.js";
-import { usageLimits } from "$lib/server/usageLimits";
-import { MetricsServer } from "$lib/server/metrics";
-import { textGeneration } from "$lib/server/textGeneration";
-import type { TextGenerationContext } from "$lib/server/textGeneration/types";
+import { buildSubtree } from "$lib/utils/tree/buildSubtree.js";
+import { convertLegacyConversation } from "$lib/utils/tree/convertLegacyConversation";
+import { isMessageId } from "$lib/utils/tree/isMessageId";
+import { error } from "@sveltejs/kit";
+import { startOfHour } from "date-fns";
+import { ObjectId } from "mongodb";
+import { z } from "zod";
 
 export async function POST({ request, locals, params, getClientAddress }) {
 	const id = z.string().parse(params.id);
@@ -151,7 +151,7 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			files: z.optional(
 				z.array(
 					z.object({
-						type: z.literal("base64").or(z.literal("hash")),
+						type: z.literal("base64").or(z.literal("hash")).or(z.literal("video")),
 						name: z.string(),
 						value: z.string(),
 						mime: z.string(),
@@ -171,11 +171,12 @@ export async function POST({ request, locals, params, getClientAddress }) {
 	const hashFiles = inputFiles?.filter((file) => file.type === "hash") ?? [];
 	const b64Files =
 		inputFiles
-			?.filter((file) => file.type !== "hash")
+			?.filter((file) => file.type !== "hash" && file.type !== "video")
 			.map((file) => {
 				const blob = Buffer.from(file.value, "base64");
 				return new File([blob], file.name, { type: file.mime });
 			}) ?? [];
+	const videoFiles = inputFiles?.filter((file) => file.type === "video") ?? [];
 
 	// check sizes
 	// todo: make configurable
@@ -184,7 +185,7 @@ export async function POST({ request, locals, params, getClientAddress }) {
 	}
 
 	const uploadedFiles = await Promise.all(b64Files.map((file) => uploadFile(file, conv))).then(
-		(files) => [...files, ...hashFiles]
+		(files) => [...files, ...hashFiles, ...videoFiles]
 	);
 
 	// we will append tokens to the content of this message

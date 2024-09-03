@@ -1,15 +1,15 @@
-import { error } from "@sveltejs/kit";
 import { collections } from "$lib/server/database";
 import type { Conversation } from "$lib/types/Conversation";
-import type { SharedConversation } from "$lib/types/SharedConversation";
 import type { MessageFile } from "$lib/types/Message";
+import type { SharedConversation } from "$lib/types/SharedConversation";
+import { error } from "@sveltejs/kit";
 
 export async function downloadFile(
 	sha256: string,
 	convId: Conversation["_id"] | SharedConversation["_id"]
 ): Promise<MessageFile & { type: "base64" }> {
 	const fileId = collections.bucket.find({ filename: `${convId.toString()}-${sha256}` });
-
+	
 	const file = await fileId.next();
 	if (!file) {
 		throw error(404, "File not found");
@@ -31,4 +31,10 @@ export async function downloadFile(
 	});
 
 	return { type: "base64", name, value: buffer.toString("base64"), mime };
+}
+
+export async function downloadVideo(
+	video_id: string,
+): Promise<MessageFile & { type: "base64" }> {
+	return { type: "video", name: "video.mp4", value: video_id, mime: "video/mp4" };
 }

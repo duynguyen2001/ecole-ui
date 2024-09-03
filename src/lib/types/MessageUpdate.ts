@@ -1,5 +1,5 @@
-import type { WebSearchSource } from "$lib/types/WebSearch";
 import type { ToolCall, ToolResult } from "$lib/types/Tool";
+import type { WebSearchSource } from "$lib/types/WebSearch";
 
 export type MessageUpdate =
 	| MessageStatusUpdate
@@ -8,7 +8,8 @@ export type MessageUpdate =
 	| MessageWebSearchUpdate
 	| MessageStreamUpdate
 	| MessageFileUpdate
-	| MessageFinalAnswerUpdate;
+	| MessageFinalAnswerUpdate
+	| MessageVideoUpdate;
 
 export enum MessageUpdateType {
 	Status = "status",
@@ -18,6 +19,7 @@ export enum MessageUpdateType {
 	Stream = "stream",
 	File = "file",
 	FinalAnswer = "finalAnswer",
+	Video = "video",
 }
 
 // Status
@@ -114,4 +116,9 @@ export interface MessageFinalAnswerUpdate {
 	type: MessageUpdateType.FinalAnswer;
 	text: string;
 	interrupted: boolean;
+}
+
+export interface MessageVideoUpdate {
+	type: MessageUpdateType.Video;
+	url: string;
 }

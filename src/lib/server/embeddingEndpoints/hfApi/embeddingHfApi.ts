@@ -1,8 +1,8 @@
-import { z } from "zod";
-import type { EmbeddingEndpoint, Embedding } from "../embeddingEndpoints";
-import { chunk } from "$lib/utils/chunk";
 import { env } from "$env/dynamic/private";
 import { logger } from "$lib/server/logger";
+import { chunk } from "$lib/utils/chunk";
+import { z } from "zod";
+import type { Embedding, EmbeddingEndpoint } from "../embeddingEndpoints";
 
 export const embeddingEndpointHfApiSchema = z.object({
 	weight: z.number().int().positive().default(1),

@@ -1,8 +1,8 @@
 import type { Message } from "$lib/types/Message";
 import { format } from "date-fns";
-import type { EndpointMessage } from "./endpoints";
-import { downloadFile } from "../files/downloadFile";
 import type { ObjectId } from "mongodb";
+import { downloadFile, downloadVideo } from "../files/downloadFile";
+import type { EndpointMessage } from "./endpoints";
 
 export async function preprocessMessages(
 	messages: Message[],
@@ -48,7 +48,7 @@ Answer the question: ${lastQuestion}`,
 async function downloadFiles(messages: Message[], convId: ObjectId): Promise<EndpointMessage[]> {
 	return Promise.all(
 		messages.map<Promise<EndpointMessage>>((message) =>
-			Promise.all((message.files ?? []).map((file) => downloadFile(file.value, convId))).then(
+			Promise.all((message.files ?? []).map((file) => file.type === "video"? downloadVideo(file.value) : downloadFile(file.value, convId))).then(
 				(files) => ({ ...message, files })
 			)
 		)

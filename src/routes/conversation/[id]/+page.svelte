@@ -1,14 +1,15 @@
 <script lang="ts">
-	import ChatWindow from "$lib/components/chat/ChatWindow.svelte";
-	import { pendingMessage } from "$lib/stores/pendingMessage";
-	import { isAborted } from "$lib/stores/isAborted";
-	import { onMount } from "svelte";
-	import { page } from "$app/stores";
 	import { goto, invalidateAll } from "$app/navigation";
 	import { base } from "$app/paths";
+	import { page } from "$app/stores";
+	import ChatWindow from "$lib/components/chat/ChatWindow.svelte";
 	import { shareConversation } from "$lib/shareConversation";
+	import { createConvTreeStore } from "$lib/stores/convTree";
 	import { ERROR_MESSAGES, error } from "$lib/stores/errors";
-	import { findCurrentModel } from "$lib/utils/models";
+	import { isAborted } from "$lib/stores/isAborted";
+	import { pendingMessage } from "$lib/stores/pendingMessage";
+	import { useSettingsStore } from "$lib/stores/settings.js";
+	import titleUpdate from "$lib/stores/titleUpdate";
 	import { webSearchParameters } from "$lib/stores/webSearchParameters";
 	import type { Message } from "$lib/types/Message";
 	import {
@@ -16,15 +17,14 @@
 		MessageUpdateType,
 		type MessageUpdate,
 	} from "$lib/types/MessageUpdate";
-	import titleUpdate from "$lib/stores/titleUpdate";
 	import file2base64 from "$lib/utils/file2base64";
+	import { isReducedMotion } from "$lib/utils/isReduceMotion.js";
+	import { fetchMessageUpdates } from "$lib/utils/messageUpdates";
+	import { findCurrentModel } from "$lib/utils/models";
 	import { addChildren } from "$lib/utils/tree/addChildren";
 	import { addSibling } from "$lib/utils/tree/addSibling";
-	import { fetchMessageUpdates } from "$lib/utils/messageUpdates";
-	import { createConvTreeStore } from "$lib/stores/convTree";
+	import { onMount } from "svelte";
 	import type { v4 } from "uuid";
-	import { isReducedMotion } from "$lib/utils/isReduceMotion.js";
-	import { useSettingsStore } from "$lib/stores/settings.js";
 
 	export let data;
 
@@ -84,12 +84,39 @@
 
 			const base64Files = await Promise.all(
 				(files ?? []).map((file) =>
-					file2base64(file).then((value) => ({
-						type: "base64" as const,
-						value,
-						mime: file.type,
-						name: file.name,
-					}))
+					file.type.startsWith("video/")
+						? fetch(`${base}/videos`, {
+								method: "POST",
+								body: (() => {
+									const formData = new FormData();
+									formData.append("file", file); // 'file' is the field name
+									return formData;
+								})(),
+						  })
+								.then((res) => res.json())
+								.then((res) => {
+									return {
+										type: "video" as const,
+										value: res.video_id,
+										mime: "video/mp4",
+										name: file.name,
+									};
+								})
+								.catch((err) => {
+									console.error("err in video upload", err);
+									return {
+										type: "base64" as const,
+										value: "",
+										mime: "",
+										name: "",
+									};
+								})
+						: file2base64(file).then((value) => ({
+								type: "base64" as const,
+								value,
+								mime: file.type,
+								name: file.name,
+						  }))
 				)
 			);
 

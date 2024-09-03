@@ -1,8 +1,8 @@
 import { env } from "$env/dynamic/private";
 import { buildPrompt } from "$lib/buildPrompt";
 import { textGenerationStream } from "@huggingface/inference";
-import type { Endpoint, EndpointMessage } from "../endpoints";
 import { z } from "zod";
+import type { Endpoint, EndpointMessage } from "../endpoints";
 import {
 	createImageProcessorOptionsValidator,
 	makeImageProcessor,
@@ -20,7 +20,7 @@ export const endpointTgiParametersSchema = z.object({
 		.object({
 			// Assumes IDEFICS
 			image: createImageProcessorOptionsValidator({
-				supportedMimeTypes: ["image/jpeg", "image/webp"],
+				supportedMimeTypes: ["image/jpeg", "image/webp", "video/mp4"],
 				preferredMimeType: "image/webp",
 				maxSizeInMB: 10,
 				maxWidth: 576,
@@ -86,6 +86,7 @@ export function endpointTgi(input: z.input<typeof endpointTgiParametersSchema>):
 
 const whiteImage = {
 	mime: "image/png",
+	video: "",
 	image: Buffer.from(
 		"/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAAQABADAREAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD+/igAoAKACgD/2Q==",
 		"base64"
@@ -101,7 +102,7 @@ async function prepareMessage(
 
 	const files = await Promise.all(message.files?.map(imageProcessor) ?? [whiteImage]);
 	const markdowns = files.map(
-		(file) => `![](data:${file.mime};base64,${file.image.toString("base64")})`
+		(file) => file.mime.startsWith("video/")? "```video\n" + `{"id": "${file.video}"}` + "```\n":`![](data:${file.mime};base64,${file.image.toString("base64")})`
 	);
 	const content = message.content + "\n" + markdowns.join("\n ");
 

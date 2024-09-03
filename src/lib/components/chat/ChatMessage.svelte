@@ -1,36 +1,36 @@
 <script lang="ts">
+	import { page } from "$app/stores";
+	import type { Message, MessageFile } from "$lib/types/Message";
+	import { deepestChild } from "$lib/utils/deepestChild";
 	import { marked, type MarkedOptions } from "marked";
 	import markedKatex from "marked-katex-extension";
-	import type { Message, MessageFile } from "$lib/types/Message";
 	import { afterUpdate, createEventDispatcher, onMount, tick } from "svelte";
-	import { deepestChild } from "$lib/utils/deepestChild";
-	import { page } from "$app/stores";
 
+	import { PUBLIC_SEP_TOKEN } from "$lib/constants/publicSepToken";
+	import type { Model } from "$lib/types/Model";
+	import CarbonChevronLeft from "~icons/carbon/chevron-left";
+	import CarbonChevronRight from "~icons/carbon/chevron-right";
+	import CarbonDownload from "~icons/carbon/download";
+	import CarbonPen from "~icons/carbon/pen";
+	import CarbonRotate360 from "~icons/carbon/rotate-360";
+	import CarbonThumbsDown from "~icons/carbon/thumbs-down";
+	import CarbonThumbsUp from "~icons/carbon/thumbs-up";
 	import CodeBlock from "../CodeBlock.svelte";
 	import CopyToClipBoardBtn from "../CopyToClipBoardBtn.svelte";
 	import IconLoading from "../icons/IconLoading.svelte";
-	import CarbonRotate360 from "~icons/carbon/rotate-360";
-	import CarbonDownload from "~icons/carbon/download";
-	import CarbonThumbsUp from "~icons/carbon/thumbs-up";
-	import CarbonThumbsDown from "~icons/carbon/thumbs-down";
-	import CarbonPen from "~icons/carbon/pen";
-	import CarbonChevronLeft from "~icons/carbon/chevron-left";
-	import CarbonChevronRight from "~icons/carbon/chevron-right";
-	import { PUBLIC_SEP_TOKEN } from "$lib/constants/publicSepToken";
-	import type { Model } from "$lib/types/Model";
 	import UploadedFile from "./UploadedFile.svelte";
 
-	import OpenWebSearchResults from "../OpenWebSearchResults.svelte";
+	import { base } from "$app/paths";
+	import { useConvTreeStore } from "$lib/stores/convTree";
 	import {
 		MessageWebSearchUpdateType,
 		type MessageToolUpdate,
 		type MessageWebSearchSourcesUpdate,
 		type MessageWebSearchUpdate,
 	} from "$lib/types/MessageUpdate";
-	import { base } from "$app/paths";
-	import { useConvTreeStore } from "$lib/stores/convTree";
 	import { isReducedMotion } from "$lib/utils/isReduceMotion";
 	import Modal from "../Modal.svelte";
+	import OpenWebSearchResults from "../OpenWebSearchResults.svelte";
 	import ToolUpdate from "./ToolUpdate.svelte";
 
 	function sanitizeMd(md: string) {
@@ -213,6 +213,8 @@
 	$: if (message.children?.length === 0) $convTreeStore.leaf = message.id;
 
 	$: modalImageToShow = null as MessageFile | null;
+	$: console.log("modalImageToShow", modalImageToShow);
+	$: console.log("messages files", messages.map((m) => m.files));
 </script>
 
 {#if modalImageToShow}
@@ -224,6 +226,11 @@
 				alt="input from user"
 				class="aspect-auto"
 			/>
+		{:else if modalImageToShow.type === "video"}
+			<video class="aspect-auto" controls>
+				<source src={"/videos/" + modalImageToShow.value} type={modalImageToShow.mime} />
+				<track kind="captions" />
+			</video>
 		{:else}
 			<!-- handle the case where this is a base64 encoded image -->
 			<img
@@ -269,6 +276,14 @@
 									alt="output from assistant"
 									class="my-2 aspect-auto max-h-48 cursor-pointer rounded-lg shadow-lg xl:max-h-56"
 								/>
+							{:else if file.type === "video"}
+								<video
+									class="my-2 aspect-auto max-h-48 cursor-pointer rounded-lg shadow-lg xl:max-h-56"
+									controls
+								>
+									<source src={"/videos/" + file.value} type={file.mime} />
+									<track kind="captions" />
+								</video>
 							{:else}
 								<!-- handle the case where this is a base64 encoded image -->
 								<img
@@ -399,6 +414,10 @@
 				<div class="flex w-fit gap-4 px-5">
 					{#each message.files as file}
 						{#if file.mime.startsWith("image/")}
+							<button on:click={() => (modalImageToShow = file)}>
+								<UploadedFile {file} canClose={false} />
+							</button>
+						{:else if file.mime.startsWith("video/")}
 							<button on:click={() => (modalImageToShow = file)}>
 								<UploadedFile {file} canClose={false} />
 							</button>

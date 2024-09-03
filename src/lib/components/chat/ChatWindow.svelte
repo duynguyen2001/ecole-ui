@@ -2,42 +2,42 @@
 	import type { Message, MessageFile } from "$lib/types/Message";
 	import { createEventDispatcher, onDestroy, onMount, SvelteComponent, tick } from "svelte";
 
-	import CarbonSendAltFilled from "~icons/carbon/send-alt-filled";
-	import CarbonExport from "~icons/carbon/export";
-	import CarbonStopFilledAlt from "~icons/carbon/stop-filled-alt";
-	import CarbonCheckmark from "~icons/carbon/checkmark";
 	import CarbonCaretDown from "~icons/carbon/caret-down";
+	import CarbonCheckmark from "~icons/carbon/checkmark";
+	import CarbonExport from "~icons/carbon/export";
+	import CarbonSendAltFilled from "~icons/carbon/send-alt-filled";
+	import CarbonStopFilledAlt from "~icons/carbon/stop-filled-alt";
 
 	import EosIconsLoading from "~icons/eos-icons/loading";
 
-	import { fade } from "svelte/transition";
-	import ChatInput from "./ChatInput.svelte";
-	import StopGeneratingBtn from "../StopGeneratingBtn.svelte";
-	import type { Model } from "$lib/types/Model";
-	import WebSearchToggle from "../WebSearchToggle.svelte";
-	import ToolsMenu from "../ToolsMenu.svelte";
-	import LoginModal from "../LoginModal.svelte";
-	import { page } from "$app/stores";
-	import FileDropzone from "./FileDropzone.svelte";
-	import RetryBtn from "../RetryBtn.svelte";
-	import UploadBtn from "../UploadBtn.svelte";
-	import HelpBtn from "../HelpBtn.svelte";
-	import file2base64 from "$lib/utils/file2base64";
-	import type { Assistant } from "$lib/types/Assistant";
-	import { base } from "$app/paths";
-	import ContinueBtn from "../ContinueBtn.svelte";
-	import AssistantIntroduction from "./AssistantIntroduction.svelte";
-	import ChatMessage from "./ChatMessage.svelte";
-	import ScrollToBottomBtn from "../ScrollToBottomBtn.svelte";
 	import { browser } from "$app/environment";
+	import { base } from "$app/paths";
+	import { page } from "$app/stores";
 	import { snapScrollToBottom } from "$lib/actions/snapScrollToBottom";
-	import SystemPromptModal from "../SystemPromptModal.svelte";
-	import ChatIntroduction from "./ChatIntroduction.svelte";
 	import { useConvTreeStore } from "$lib/stores/convTree";
-	import UploadedFile from "./UploadedFile.svelte";
 	import { useSettingsStore } from "$lib/stores/settings";
+	import type { Assistant } from "$lib/types/Assistant";
+	import type { Model } from "$lib/types/Model";
 	import type { ToolFront } from "$lib/types/Tool";
+	import file2base64 from "$lib/utils/file2base64";
+	import { fade } from "svelte/transition";
+	import ContinueBtn from "../ContinueBtn.svelte";
 	import HelpBlock from "../HelpBlock.svelte";
+	import HelpBtn from "../HelpBtn.svelte";
+	import LoginModal from "../LoginModal.svelte";
+	import RetryBtn from "../RetryBtn.svelte";
+	import ScrollToBottomBtn from "../ScrollToBottomBtn.svelte";
+	import StopGeneratingBtn from "../StopGeneratingBtn.svelte";
+	import SystemPromptModal from "../SystemPromptModal.svelte";
+	import ToolsMenu from "../ToolsMenu.svelte";
+	import UploadBtn from "../UploadBtn.svelte";
+	import WebSearchToggle from "../WebSearchToggle.svelte";
+	import AssistantIntroduction from "./AssistantIntroduction.svelte";
+	import ChatInput from "./ChatInput.svelte";
+	import ChatIntroduction from "./ChatIntroduction.svelte";
+	import ChatMessage from "./ChatMessage.svelte";
+	import FileDropzone from "./FileDropzone.svelte";
+	import UploadedFile from "./UploadedFile.svelte";
 
 	export let messages: Message[] = [];
 	export let loading = false;
@@ -109,7 +109,38 @@
 			lastMessage.updates?.findIndex((u) => u.type === "status" && u.status === "error") !== -1);
 
 	$: sources = files?.map<Promise<MessageFile>>((file) =>
-		file2base64(file).then((value) => ({ type: "base64", value, mime: file.type, name: file.name }))
+		file.type.startsWith("video/")
+			? fetch(`${base}/videos`, {
+					method: "POST",
+					body: (() => {
+						const formData = new FormData();
+						formData.append("file", file); // 'file' is the field name
+						return formData;
+					})(),
+			  })
+					.then((res) => res.json())
+					.then((res) => {
+						return {
+							type: "video" as const,
+							value: res.video_id,
+							mime: "video/mp4",
+							name: file.name,
+						};
+					})
+					.catch((err) => {
+						return {
+							type: "base64" as const,
+							value: "",
+							mime: "",
+							name: "",
+						};
+					})
+			: file2base64(file).then((value) => ({
+					type: "base64",
+					value,
+					mime: file.type,
+					name: file.name,
+			  }))
 	);
 
 	function onShare() {
@@ -150,6 +181,7 @@
 	$: activeMimeTypes = [
 		...activeTools.flatMap((tool: ToolFront) => tool.mimeTypes ?? []),
 		...(currentModel.multimodal ? ["image/*"] : []),
+		"video/*",
 	];
 
 	const onDragEnter = (e: DragEvent) => {
@@ -211,8 +243,8 @@
 		<div
 			in:fade={{ duration: 200 }}
 			out:fade={{ duration: 200 }}
-			class="fixed inset-0 w-100 h-100 bg-white bg-opacity-10 z-50"
-		></div>
+			class="w-100 h-100 fixed inset-0 z-50 bg-white bg-opacity-10"
+		/>
 	{/if}
 
 	<div
@@ -237,7 +269,7 @@
 						/>
 					{:else}
 						<div
-							class="flex size-6 items-center justify-center rounded-full bg-gray-300 font-bold uppercase text-gray-500"
+							class="size-6 flex items-center justify-center rounded-full bg-gray-300 font-bold uppercase text-gray-500"
 						>
 							{$page.data?.assistant.name[0]}
 						</div>
@@ -313,7 +345,7 @@
 		/>
 	</div>
 	<div
-		class="dark:via-gray-80 pointer-events-none absolute inset-x-0 bottom-0 z-0 mx-auto flex w-full max-w-3xl flex-col items-center justify-center bg-gradient-to-t from-white via-white/80 to-white/0 px-3.5 py-4 max-md:border-t max-md:bg-white sm:px-5 md:py-8 xl:max-w-4xl dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/0 max-md:dark:bg-gray-900 [&>*]:pointer-events-auto"
+		class="dark:via-gray-80 pointer-events-none absolute inset-x-0 bottom-0 z-0 mx-auto flex w-full max-w-3xl flex-col items-center justify-center bg-gradient-to-t from-white via-white/80 to-white/0 px-3.5 py-4 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/0 max-md:border-t max-md:bg-white max-md:dark:bg-gray-900 sm:px-5 md:py-8 xl:max-w-4xl [&>*]:pointer-events-auto"
 	>
 		{#if sources?.length}
 			<div class="flex flex-row flex-wrap justify-center gap-2.5 max-md:pb-3">
@@ -332,7 +364,7 @@
 
 		<div class="w-full">
 			<div class="flex w-full pb-3">
-				<div class="ml-auto gap-2 flex flex-row">
+				<div class="ml-auto flex flex-row gap-2">
 					<HelpBtn
 						classNames="ml-auto"
 						onclick={() => {
@@ -411,19 +443,19 @@
 
 						{#if loading}
 							<button
-								class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 disabled:opacity-60 enabled:hover:text-gray-700 md:hidden dark:disabled:opacity-40 enabled:dark:hover:text-gray-100"
+								class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:hidden"
 								on:click={() => dispatch("stop")}
 							>
 								<CarbonStopFilledAlt />
 							</button>
 							<div
-								class="mx-1 my-1 hidden h-[2.4rem] items-center p-1 px-[0.7rem] text-gray-400 disabled:opacity-60 enabled:hover:text-gray-700 md:flex dark:disabled:opacity-40 enabled:dark:hover:text-gray-100"
+								class="mx-1 my-1 hidden h-[2.4rem] items-center p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:flex"
 							>
 								<EosIconsLoading />
 							</div>
 						{:else}
 							<button
-								class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 disabled:opacity-60 enabled:hover:text-gray-700 dark:disabled:opacity-40 enabled:dark:hover:text-gray-100"
+								class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
 								disabled={!message || isReadOnly}
 								type="submit"
 							>

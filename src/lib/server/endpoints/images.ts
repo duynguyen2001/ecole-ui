@@ -1,6 +1,6 @@
+import type { MessageFile } from "$lib/types/Message";
 import type { Sharp } from "sharp";
 import sharp from "sharp";
-import type { MessageFile } from "$lib/types/Message";
 import { z, type util } from "zod";
 
 export interface ImageProcessorOptions<TMimeType extends string = string> {
@@ -12,6 +12,7 @@ export interface ImageProcessorOptions<TMimeType extends string = string> {
 }
 export type ImageProcessor<TMimeType extends string = string> = (file: MessageFile) => Promise<{
 	image: Buffer;
+	video?: string;
 	mime: TMimeType;
 }>;
 
@@ -44,6 +45,11 @@ export function makeImageProcessor<TMimeType extends string = string>(
 	return async (file) => {
 		const { supportedMimeTypes, preferredMimeType, maxSizeInMB, maxWidth, maxHeight } = options;
 		const { mime, value } = file;
+
+		console.log("Processing image", { mime , supportedMimeTypes, preferredMimeType});
+		if (mime.startsWith("video/")) {
+			return { "video": value, mime };
+		}
 
 		const buffer = Buffer.from(value, "base64");
 		let sharpInst = sharp(buffer);

@@ -1,7 +1,7 @@
+import type { v4 } from "uuid";
 import type { MessageUpdate } from "./MessageUpdate";
 import type { Timestamps } from "./Timestamps";
 import type { WebSearch } from "./WebSearch";
-import type { v4 } from "uuid";
 
 export type Message = Partial<Timestamps> & {
 	from: "user" | "assistant" | "system";
@@ -26,7 +26,7 @@ export type Message = Partial<Timestamps> & {
 };
 
 export type MessageFile = {
-	type: "hash" | "base64";
+	type: "hash" | "base64" | "video";
 	name: string;
 	value: string;
 	mime: string;

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { createEventDispatcher } from "svelte";
 	import { page } from "$app/stores";
 	import type { MessageFile } from "$lib/types/Message";
+	import { createEventDispatcher } from "svelte";
 	import CarbonClose from "~icons/carbon/close";
 	import CarbonDocumentBlank from "~icons/carbon/document-blank";
 
@@ -20,6 +20,7 @@
 
 		return `${start}…${end}`;
 	}
+	$: console.log("path", "/video/" + file.value)
 </script>
 
 <div
@@ -36,6 +37,16 @@
 				alt={file.name}
 				class="h-full w-full bg-gray-200 object-cover dark:bg-gray-800"
 			/>
+		</div>
+	{:else if file.mime.startsWith("video/")}
+		<div class="w-full rounded-xl">
+			<video
+				class="h-full w-full bg-gray-200 object-cover dark:bg-gray-800"
+				autoplay
+			>
+				<source src={"/videos/" + file.value} />
+				<track kind="captions" />
+			</video>
 		</div>
 	{:else}
 		<div
