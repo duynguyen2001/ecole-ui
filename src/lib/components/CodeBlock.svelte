@@ -6,6 +6,7 @@
 	import HorizontalBarCharts from "./d3figure/HorizontalBarCharts.svelte";
 	import ExplainBlock from "./ExplainBlock.svelte";
 	import ImagesBlock from "./ImagesBlock.svelte";
+	import VideoExplanationBlock from "./VideoExplanationBlock.svelte";
 	function zip(arr1, arr2) {
 		let length = Math.min(arr1.length, arr2.length);
 		let result = [];
@@ -21,6 +22,7 @@
 	export let parsedParams = {};
 	const exceptionLangs = [
 		"barchart",
+		"video-result",
 		"decision-tree",
 		"collapsible-div",
 		"images",
@@ -65,6 +67,10 @@
 {:else if lang == "decision-tree"}
 	<div class="group w-[500px]">
 		<DecisionTree data={parsedParams} />
+	</div>
+{:else if lang == "video-result"}
+	<div class="group w-[500px]">
+		<VideoExplanationBlock json_data={parsedParams} />
 	</div>
 {:else if lang == "images"}
 	<div class="w-min-[500px] group w-full">
