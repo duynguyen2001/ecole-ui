@@ -14,3 +14,4 @@ SECRET_CONFIG
 gcp-*.json
 test_file.txt
 .env.local
++layout.server.ts
