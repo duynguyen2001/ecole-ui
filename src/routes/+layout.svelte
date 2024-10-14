@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import ProfilDropDown from '$lib/components/ProfileDropDown.svelte'; 
   let username = 'User';
@@ -10,7 +10,7 @@
 
 <main>
   <header>
-    <h1>ECOLE-MIRACLE</h1>
+    <h1 class="text-[4rem]">ECOLE-MIRACLE</h1>
     <div class="user-profile flex flex-row justify-center items-center content-center gap-[1rem]">
       <span>{username}</span>
       <ProfilDropDown />
