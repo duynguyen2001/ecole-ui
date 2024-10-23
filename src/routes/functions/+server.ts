@@ -1,9 +1,9 @@
 import type { RequestHandler } from "@sveltejs/kit";
-import { COORDINATOR_URL } from "$env/static/private";
+import { PARSER_URL } from "$env/static/private";
 
 export const GET: RequestHandler = async () => {
 	try {
-		const coordinatorURL = COORDINATOR_URL;
+		const coordinatorURL = PARSER_URL;
 		console.log("coordinatorURL", coordinatorURL);
 		const response = await fetch(`${coordinatorURL}/commands`, {
 			method: "GET",
