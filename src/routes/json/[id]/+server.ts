@@ -1,9 +1,9 @@
-import { IMAGE_SERVER_URL } from "$env/static/private";
+import { DATA_SERVER_URL } from "$env/static/private";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const GET: RequestHandler = async ({ params }) => {
 	try {
-		const imageUrl = IMAGE_SERVER_URL;
+		const imageUrl = DATA_SERVER_URL;
 		const pathname = params.id;
 
 		const response = await fetch(`${imageUrl}/json/${pathname}`);
@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
 export const DELETE = async ({ params }) => {
 	try {
-		const imageUrl = IMAGE_SERVER_URL;
+		const imageUrl = DATA_SERVER_URL;
 		const pathname = params.id;
 
 		const response = await fetch(`${imageUrl}/images/${pathname}`, {

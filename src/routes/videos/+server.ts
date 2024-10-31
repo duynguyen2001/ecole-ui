@@ -1,4 +1,4 @@
-import { IMAGE_SERVER_URL } from "$env/static/private";
+import { DATA_SERVER_URL } from "$env/static/private";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const POST: RequestHandler  = async ({ request }) => {
@@ -17,7 +17,7 @@ export const POST: RequestHandler  = async ({ request }) => {
 		const apiFormData = new FormData();
 		apiFormData.append("file", file, file.name);
 		// Send the video file to FastAPI server
-		const response = await fetch(`${IMAGE_SERVER_URL}/videos/`, {
+		const response = await fetch(`${DATA_SERVER_URL}/videos/`, {
 			method: "POST",
 			body: apiFormData,
 		});

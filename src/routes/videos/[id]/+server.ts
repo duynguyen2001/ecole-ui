@@ -1,11 +1,11 @@
-import { IMAGE_SERVER_URL } from "$env/static/private";
+import { DATA_SERVER_URL } from "$env/static/private";
 import type { RequestEvent } from "@sveltejs/kit";
 import { error } from "@sveltejs/kit";
 import fetch from "node-fetch";
 
 export async function GET(event: RequestEvent) {
 	const { id } = event.params;
-	const imageUrl = IMAGE_SERVER_URL;
+	const imageUrl = DATA_SERVER_URL;
 
 	try {
 		const apiResponse = await fetch(`${imageUrl}/videos/${id}`, {
