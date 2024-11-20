@@ -19,12 +19,12 @@
 	</header>
 
 	<div class="content">
-		<nav>
-			<ul>
-				<li><button>Labels</button></li>
-				<li><button>History</button></li>
-				<li><button>Retrain</button></li>
-				<li><button>Help</button></li>
+		<nav class="w-[100px]">
+			<ul class="w-full">
+				<li class="text-[14px]"><button>Labels</button></li>
+				<li class="text-[14px]"><button>History</button></li>
+				<li class="text-[14px]"><button>Retrain</button></li>
+				<li class="text-[14px]"><button>Help</button></li>
 			</ul>
 		</nav>
 
