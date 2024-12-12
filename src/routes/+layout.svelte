@@ -2,6 +2,7 @@
 	import "../styles/main.css";
 	import { onMount } from "svelte";
 	import ProfilDropDown from "$lib/components/ProfileDropDown.svelte";
+	import Icon from "@iconify/svelte";
 	let username = "User";
 
 	onMount(() => {
@@ -10,8 +11,8 @@
 </script>
 
 <main>
-	<header>
-		<h1>ECOLE-MIRACLE</h1>
+	<header class="h-[5rem]">
+		<h1 class="text-[1.3rem]">ECOLE-MIRACLE</h1>
 		<div class="user-profile flex flex-row content-center items-center justify-center gap-[1rem]">
 			<span>{username}</span>
 			<ProfilDropDown />
@@ -19,19 +20,34 @@
 	</header>
 
 	<div class="content">
-		<nav class="w-[100px]">
-			<ul class="w-full">
-				<li class="text-[14px]"><button>Labels</button></li>
-				<li class="text-[14px]"><button>History</button></li>
-				<li class="text-[14px]"><button>Retrain</button></li>
-				<li class="text-[14px]"><button>Help</button></li>
-			</ul>
-		</nav>
+		<div class="border-[1px] border-black bg-[#f0f0f0] px-[1rem] py-[1rem]">
+			<ul class="flex flex-col gap-[20px]">
+				<li class="flex flex-col items-center">
+					<Icon icon="mdi:label-multiple" width="25" height="25" color="#333333" />
+					<div class="text-[12px]">Labels</div>
+				</li>
 
-		<section class="main-content bg-white">
+				<li class="flex flex-col items-center">
+					<Icon icon="mdi:clipboard-text-history-outline" width="25" height="25" color="#333333" />
+					<div class="text-[12px]">History</div>
+				</li>
+
+				<li class="flex flex-col items-center">
+					<Icon icon="mdi:train" width="25" height="25" color="#333333" />
+					<div class="text-[12px]">Retrain</div>
+				</li>
+
+				<li class="flex flex-col items-center">
+					<Icon icon="mdi:tooltip-help" width="25" height="25" color="#333333" />
+					<div class="text-[12px]">Help</div>
+				</li>
+			</ul>
+		</div>
+
+		<div class="main-content bg-white">
 			<!-- Main content will go here -->
 			<slot />
-		</section>
+		</div>
 	</div>
 </main>
 
@@ -56,41 +72,9 @@
 		align-items: center;
 	}
 
-	.avatar {
-		width: 30px;
-		height: 30px;
-		border-radius: 50%;
-		background-color: #ccc;
-		margin-left: 0.5rem;
-	}
-
 	.content {
 		display: flex;
 		flex: 1;
-	}
-
-	nav {
-		width: 200px;
-		background-color: #e0e0e0;
-		padding: 1rem;
-	}
-
-	nav ul {
-		list-style-type: none;
-		padding: 0;
-	}
-
-	nav li {
-		margin-bottom: 0.5rem;
-	}
-
-	nav button {
-		width: 100%;
-		text-align: left;
-		padding: 0.5rem;
-		background-color: #d0d0d0;
-		border: none;
-		cursor: pointer;
 	}
 
 	.main-content {
