@@ -57,7 +57,7 @@ export const parseCVATXML = async (
 					});
 
 					// Add the points to the array
-					polygonInfo.push({ label, points: curPoints });
+					polygonInfo.push({ label, points: curPoints, status: "normal" });
 				}
 			}
 			imageElements.push({ id, imagePath, polygonPoints: polygonInfo, width, height });
@@ -114,9 +114,6 @@ export const updateCVATXML = async (
 			parent.replaceChild(labelsDoc, oldLabels);
 		}
 
-		// create a new XML document to update the image elements
-		console.log(xmlDoc.getElementsByTagName("image"));
-
 		// assume no new images are added, so the order of images is the same
 		const imagesDoc = Array.from(xmlDoc.getElementsByTagName("image"));
 		imagesDoc.forEach((imageDoc, imgId) => {
@@ -124,7 +121,7 @@ export const updateCVATXML = async (
 			const polygonsInfo = images[imgId].origin.polygonPoints;
 
 			polygonsInfo.forEach((polygonInfo, polygonId) => {
-				let polygonDoc;
+				let polygonDoc: HTMLElement | SVGPolygonElement;
 				if (polygonId < polygonsDoc.length) {
 					// Reuse existing polygon element
 					polygonDoc = polygonsDoc[polygonId];
@@ -146,19 +143,23 @@ export const updateCVATXML = async (
 				}
 
 				// Update polygon-specific attributes
-				polygonDoc.setAttribute("label", polygonInfo.label);
-				const formattedPoints = polygonInfo.points
-					.reduce<string[]>((acc, cur, idx) => {
-						if (idx % 2 === 0) {
-							acc.push(`${cur},${polygonInfo.points[idx + 1]}`);
-						}
-						return acc;
-					}, [])
-					.join(";");
-				polygonDoc.setAttribute("points", formattedPoints);
+				if (polygonInfo.status === "deleted") {
+					// Remove the polygon element
+					polygonDoc.remove();
+					return;
+				} else if (polygonInfo.status === "changed") {
+					polygonDoc.setAttribute("label", polygonInfo.label);
+					const formattedPoints = polygonInfo.points
+						.reduce<string[]>((acc, cur, idx) => {
+							if (idx % 2 === 0) {
+								acc.push(`${cur},${polygonInfo.points[idx + 1]}`);
+							}
+							return acc;
+						}, [])
+						.join(";");
+					polygonDoc.setAttribute("points", formattedPoints);
+				}
 			});
-
-			console.log(imageDoc);
 		});
 
 		// download the updated XML file

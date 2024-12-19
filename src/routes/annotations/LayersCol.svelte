@@ -2,15 +2,15 @@
 	import type { ImageData, LabelInfo, PolygonInfo } from "./types";
 	import Icon from "@iconify/svelte";
 	import { Alert, Button } from "flowbite-svelte";
+	import { actionDeletePolygon, currentImage, actionSaveLabelChanges } from "./actions";
+	import { get } from "svelte/store";
 
 	import { generateRandomColor } from "./HSLToRGB";
 	import { changeLockState, changeVisibility } from "./store";
-	export let currentImage: ImageData | undefined;
 	export let labelsInfo: Map<string, LabelInfo>;
 	export let currentLayer: number;
 	export let currentLayerFocused: boolean;
-	export let snapshots: ImageData[][];
-	export let images: ImageData[];
+	export let handleClick: (image_info: ImageData) => void;
 	let labels: string[] = [];
 	let warning = false;
 
@@ -21,6 +21,8 @@
 		}
 	}
 
+	$: currentImageValue = $currentImage;
+
 	$: if (labelsInfo) {
 		labels = Array.from(labelsInfo.keys());
 	}
@@ -29,7 +31,8 @@
 	function onNameChange(e: Event, polygon: PolygonInfo, polygonIndex: number) {
 		const newName = (e.target as HTMLSelectElement)?.value;
 		polygon.label = newName;
-		if (currentImage) currentImage.origin.polygonPoints = [...currentImage.origin.polygonPoints];
+		if (currentImageValue)
+			currentImageValue.origin.polygonPoints = [...currentImageValue.origin.polygonPoints];
 
 		// Save changes to the snapshot
 		actionSaveLabelChanges(currentImage, polygonIndex, newName);
@@ -72,47 +75,6 @@
 	function lockMode() {
 		console.log("lock mode");
 	}
-
-	function actionSaveLabelChanges(
-		currentImage: ImageData | undefined,
-		polygonIndex: number,
-		replaceLabel: string
-	) {
-		console.log("save label changes");
-
-		// Update points in the current snapshot
-		if (!currentImage) return;
-		const currentImageId = currentImage.origin.id;
-		if (currentImageId === undefined) return;
-
-		const originCurrentImage = images[currentImageId];
-		const newPolygonPoints = [...originCurrentImage.origin.polygonPoints];
-		newPolygonPoints[polygonIndex] = {
-			...newPolygonPoints[polygonIndex],
-			label: replaceLabel,
-		};
-
-		// create copy of origin
-		const newOrigin = { ...originCurrentImage.origin };
-		newOrigin.polygonPoints = newPolygonPoints;
-
-		// create copy of ImageData
-		const newImageData = { ...originCurrentImage };
-		newImageData.origin = newOrigin;
-
-		// create copy of images
-		const newSnapshot = [...images];
-		newSnapshot[currentImageId] = newImageData;
-
-		snapshots.push(newSnapshot);
-		images = newSnapshot;
-		console.log(
-			snapshots[snapshots.length - 2][currentImageId].origin.polygonPoints[polygonIndex].label
-		);
-		console.log(
-			snapshots[snapshots.length - 1][currentImageId].origin.polygonPoints[polygonIndex].label
-		);
-	}
 </script>
 
 <div class="flex h-full w-full flex-col">
@@ -133,38 +95,41 @@
 	{/if} -->
 	<div class="h-1/2 overflow-y-auto">
 		<div class="bg-[#D9D9D9] p-[10px]">Layers</div>
-		{#if currentImage && labelsInfo}
+		{#if currentImageValue && labelsInfo}
 			<div class="flex flex-col gap-[1px] px-[10px] py-[10px]">
-				{#each currentImage.origin.polygonPoints as polygon, i}
-					<div
-						data-layer={i}
-						class={`gap-end relative flex flex-row items-center justify-between rounded-[5px] border-[2px] border-solid p-[10px] ${
-							i === currentLayer ? "border-black" : "border-transparent hover:border-black"
-						}`}
-						style={`background-color: ${labelsInfo?.get(polygon.label)?.color}; `}
-						role="cell"
-						tabindex="0"
-					>
-						<div class="absolute left-[3px] top-[1px] text-[8px]">{i + 1}</div>
-						<select
-							class="rounded-sm text-[12px]"
-							id="layer-select"
-							bind:value={polygon.label}
-							on:change={(e) => onNameChange(e, polygon, i)}
+				{#each currentImageValue.origin.polygonPoints as polygon, i}
+					{#if polygon.status !== "deleted"}
+						<div
+							data-layer={i}
+							class={`gap-end relative flex flex-row items-center justify-between rounded-[5px] border-[2px] border-solid p-[10px] ${
+								i === currentLayer ? "border-black" : "border-transparent hover:border-black"
+							}`}
+							style={`background-color: ${labelsInfo?.get(polygon.label)?.color}; `}
+							role="cell"
+							tabindex="0"
 						>
-							{#each labels as label}
-								<option value={label}>{label}</option>
-							{/each}
-						</select>
-						<div class="flex flex-row items-center gap-[10px]">
-							<button on:click={() => changeLockState(i)}>
-								<Icon icon="mdi:lock" />
-							</button>
-							<button on:click={() => changeVisibility(i)}><Icon icon="mdi:eye" /></button>
-
-							<Icon icon="mdi:trash" />
+							<div class="absolute left-[3px] top-[1px] text-[8px]">{i + 1}</div>
+							<select
+								class="rounded-sm text-[12px]"
+								id="layer-select"
+								bind:value={polygon.label}
+								on:change={(e) => onNameChange(e, polygon, i)}
+							>
+								{#each labels as label}
+									<option value={label}>{label}</option>
+								{/each}
+							</select>
+							<div class="flex flex-row items-center gap-[10px]">
+								<button on:click={() => changeLockState(i)}>
+									<Icon icon="mdi:lock" />
+								</button>
+								<button on:click={() => changeVisibility(i)}><Icon icon="mdi:eye" /></button>
+								<button on:click={() => actionDeletePolygon(currentImage, i)}
+									><Icon icon="mdi:trash" /></button
+								>
+							</div>
 						</div>
-					</div>
+					{/if}
 				{/each}
 			</div>
 		{/if}

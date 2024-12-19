@@ -6,6 +6,7 @@ export interface LabelInfo {
 export interface PolygonInfo {
 	label: string;
 	points: number[];
+	status: "deleted" | "changed" | "normal"; // flag to indicate if the polygon is deleted to show up on the screen. This helps to keep track of the id of each polygon to overwrite the corresponding polygon in the XML file. It also helps to keep track of the polygons that have been changed to efficiently update the XML file.
 }
 
 export interface ImageInfo {

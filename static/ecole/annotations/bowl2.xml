@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+    <version>1.1</version>
+    <meta>
+        <project>
+            <id>189820</id>
+            <name>bowl</name>
+            <bugtracker/>
+            <created>2024-10-12 04:05:06.857529+00:00</created>
+            <updated>2024-10-12 04:15:01.613160+00:00</updated>
+            <tasks>
+                <task>
+                    <id>950638</id>
+                    <name>predownloaded images</name>
+                    <size>15</size>
+                    <mode>annotation</mode>
+                    <overlap>0</overlap>
+                    <bugtracker/>
+                    <created>2024-10-12 04:05:26.648261+00:00</created>
+                    <updated>2024-10-12 04:15:01.610651+00:00</updated>
+                    <subset>Train</subset>
+                    <start_frame>0</start_frame>
+                    <stop_frame>14</stop_frame>
+                    <frame_filter/>
+                    <segments>
+                        <segment>
+                            <id>1309110</id>
+                            <start>0</start>
+                            <stop>14</stop>
+                            <url>https://app.cvat.ai/api/jobs/1306686</url>
+                        </segment>
+                    </segments>
+                    <owner>
+                        <username>tai12</username>
+                        <email>taita11.work@gmail.com</email>
+                    </owner>
+                    <assignee/>
+                </task>
+            </tasks>
+            <subsets>Train</subsets>
+            <owner>
+                <username>tai12</username>
+                <email>taita11.work@gmail.com</email>
+            </owner>
+            <assignee/>
+            <labels>
+                <label>
+                    <name>&lt;root concept&gt;</name>
+                    <color>#FF5733</color>
+                    <type>polygon</type>
+                    <attributes/>
+                </label>
+                <label>
+                    <name>rim</name>
+                    <color>#33FF57</color>
+                    <type>polygon</type>
+                    <attributes/>
+                </label>
+                <label>
+                    <name>mouth</name>
+                    <color>#FF33A5</color>
+                    <type>polygon</type>
+                    <attributes/>
+                </label>
+                <label>
+                    <name>base</name>
+                    <color>#33FFF2</color>
+                    <type>polygon</type>
+                    <attributes/>
+                </label>
+            </labels>
+        </project>
+        <dumped>2024-10-12 04:15:14.034799+00:00</dumped>
+    </meta>
+    <image id="0" name="00add04ead7f7c72cd8dafb97e7ecf8b145848f83240c9f5d18d6ff7f3cc9d4e.jpg" subset="Train" task_id="950638" width="474" height="318">
+        <polygon label="&lt;root concept&gt;" source="file" occluded="0" points="257.06,4.1;474,3.07;474,16.12;473.18,67.91;474,79.42;474,82.95;467,104.44;473.18,106.5;461.86,149.21;466.49,156.41;459.28,190.37;466.49,191.92;457.23,239.77;441.79,267.56;416.58,292.77;393.94,304.61;357.92,312.84;324.47,309.75;302.34,302.55;291.54,295.86;284.85,286.6;255.52,255.21;245.23,226.91;241.11,183.17;245.23,182.14;239.05,143.03;241.62,129.66;240.08,92.61;247.28,88.49;243.17,51.96;251.4,28.29" z_order="0"></polygon>
+        <polygon label="base" source="file" occluded="0" points="81.08,298.95;86.74,307.69;120.7,310.78;174.22,300.49;178.33,290.71;121.22,305.12" z_order="0"></polygon>
+        <polygon label="base" source="file" occluded="0" points="300.8,294.83;303.37,304.61;334.76,314.38;379.01,313.35;395.48,308.21;395.48,302.55;346.08,308.21" z_order="0"></polygon>
+        <polygon label="&lt;root concept&gt;" source="file" occluded="0" points="11.1,21.08;62.56,4.1;225.67,4.1;235.96,50.93;234.94,214.04;204.06,272.19;172.16,298.95;111.95,310.78;83.65,305.12;76.45,296.37;40.94,269.62;20.88,236.17;12.64,198.09;15.22,146.12;19.33,139.95;11.1,90.55;27.05,73.05" z_order="0"></polygon>
+        <polygon label="mouth" source="file" occluded="0" points="139.83,40.5;335.36,55.9;93.62,167.3" z_order="0"/>
+    </image>
+    <image id="1" name="027ce8de9e48c550b11ee8261538bd62f5ede7cc6826306e113c96f42ab349eb.jpg" subset="Train" task_id="950638" width="474" height="474">
+        <polygon label="&lt;root concept&gt;" source="file" occluded="0" points="44,167;35,184;33,193;34,207;57,275;71,299;101,326;115,334;168,356;183,360;209,363;260,362;291,356;333,341;371,319;396,292;410,271;418,248;426,214;426,209;431,192;430,173;424,160;414,148;393,133;362,119;341,113;317,108;271,103;208,104;159,111;151,114;130,118;104,127;78,139;60,151" z_order="0"></polygon>
+        <polygon label="mouth" source="file" occluded="0" points="114.45,125.59;56.47,157.8;38.06,193.7;59.23,236.04;108.01,257.21;265.4,271.93;351.91,248.92;404.38,219.47;428.31,191.86;411.74,149.52;328.9,114.55;234.1,107.18;183.48,112.71" z_order="0"></polygon>
+    </image>
+</annotations>
