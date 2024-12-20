@@ -2,7 +2,7 @@
 	import type { ImageData, LabelInfo, PolygonInfo } from "./types";
 	import Icon from "@iconify/svelte";
 	import { Alert, Button } from "flowbite-svelte";
-	import { actionDeletePolygon, currentImage, actionSaveLabelChanges } from "./actions";
+	import { actionSaveLabelChanges, addSnapshot, snapshots, images } from "./actions";
 	import { get } from "svelte/store";
 
 	import { generateRandomColor } from "./HSLToRGB";
@@ -10,7 +10,7 @@
 	export let labelsInfo: Map<string, LabelInfo>;
 	export let currentLayer: number;
 	export let currentLayerFocused: boolean;
-	export let handleClick: (image_info: ImageData) => void;
+	export let currentImage: ImageData | undefined;
 	let labels: string[] = [];
 	let warning = false;
 
@@ -21,8 +21,6 @@
 		}
 	}
 
-	$: currentImageValue = $currentImage;
-
 	$: if (labelsInfo) {
 		labels = Array.from(labelsInfo.keys());
 	}
@@ -31,8 +29,7 @@
 	function onNameChange(e: Event, polygon: PolygonInfo, polygonIndex: number) {
 		const newName = (e.target as HTMLSelectElement)?.value;
 		polygon.label = newName;
-		if (currentImageValue)
-			currentImageValue.origin.polygonPoints = [...currentImageValue.origin.polygonPoints];
+		if (currentImage) currentImage.origin.polygonPoints = [...currentImage.origin.polygonPoints];
 
 		// Save changes to the snapshot
 		actionSaveLabelChanges(currentImage, polygonIndex, newName);
@@ -75,6 +72,49 @@
 	function lockMode() {
 		console.log("lock mode");
 	}
+
+	const actionDeletePolygon = (polygonIndex: number) => {
+		if (!currentImage) return;
+
+		// UPDATE IMAGES
+		const currentImageId = currentImage.origin.id;
+		const currentImageData = get(images)[currentImageId];
+		const newPolygons = currentImageData.origin.polygonPoints.slice();
+		newPolygons[polygonIndex] = {
+			...newPolygons[polygonIndex],
+			status: "deleted",
+		};
+		// create copy of origin
+		const newOrigin = { ...currentImageData.origin };
+		newOrigin.polygonPoints = newPolygons;
+		// create copy of ImageData
+		const newImageData = { ...currentImageData };
+		newImageData.origin = newOrigin;
+		// create copy of images
+		const newSnapshot = [...get(images)];
+		newSnapshot[currentImageId] = newImageData;
+		// Replace the array reference
+		currentImage.origin.polygonPoints = newPolygons;
+		currentImage = { ...currentImage };
+
+		addSnapshot(newSnapshot);
+		console.log(
+			"before",
+			get(snapshots)[get(snapshots).length - 2][currentImageId].origin.polygonPoints
+		);
+		console.log(
+			"updated",
+			get(snapshots)[get(snapshots).length - 1][currentImageId].origin.polygonPoints
+		);
+
+		console.log("before currentImg", currentImage.origin.polygonPoints[polygonIndex].status);
+
+		// // Replace the parent reference for safety
+		// currentImage.origin = {
+		// 	...currentImage.origin,
+		// 	polygonPoints: newPolygons,
+		// };
+	};
 </script>
 
 <div class="flex h-full w-full flex-col">
@@ -95,10 +135,10 @@
 	{/if} -->
 	<div class="h-1/2 overflow-y-auto">
 		<div class="bg-[#D9D9D9] p-[10px]">Layers</div>
-		{#if currentImageValue && labelsInfo}
+		{#if currentImage && labelsInfo}
 			<div class="flex flex-col gap-[1px] px-[10px] py-[10px]">
-				{#each currentImageValue.origin.polygonPoints as polygon, i}
-					{#if polygon.status !== "deleted"}
+				{#each currentImage.origin.polygonPoints as polygon, i}
+					{#if currentImage && polygon.status !== "deleted"}
 						<div
 							data-layer={i}
 							class={`gap-end relative flex flex-row items-center justify-between rounded-[5px] border-[2px] border-solid p-[10px] ${
@@ -124,9 +164,7 @@
 									<Icon icon="mdi:lock" />
 								</button>
 								<button on:click={() => changeVisibility(i)}><Icon icon="mdi:eye" /></button>
-								<button on:click={() => actionDeletePolygon(currentImage, i)}
-									><Icon icon="mdi:trash" /></button
-								>
+								<button on:click={() => actionDeletePolygon(i)}><Icon icon="mdi:trash" /></button>
 							</div>
 						</div>
 					{/if}

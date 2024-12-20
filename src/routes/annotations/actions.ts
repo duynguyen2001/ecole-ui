@@ -12,7 +12,6 @@ import { MAX_WIDTH_SMALL, MAX_HEIGHT_SMALL, MAX_WIDTH_LARGE, MAX_HEIGHT_LARGE } 
 // MANAGE ACTIONS THAT CREATE A SNAPSHOT
 export const snapshots = writable<ImageData[][]>([]); // history of all the snapshots, updated when there is a change in any image
 export const images = writable<ImageData[]>([]); // current snapshot
-export const currentImage = writable<ImageData | undefined>(undefined);
 
 // current snapshot is updated when the snapshots are updated
 snapshots.subscribe((snapshots) => {
@@ -74,90 +73,6 @@ export const clearImages = () => {
 export const clearAll = () => {
 	clearSnapshots();
 	clearImages();
-};
-
-export const actionSaveAnnotationChanges = (
-	event: CustomEvent,
-	currentImageValue: ImageData | undefined,
-	polygonIndex: number,
-	index: number,
-	MAX_WIDTH_LARGE: number,
-	MAX_HEIGHT_LARGE: number,
-	MAX_WIDTH_SMALL: number,
-	MAX_HEIGHT_SMALL: number
-) => {
-	if (!currentImageValue) return;
-
-	const x = currentImageValue.convertedPolygons[polygonIndex][index];
-	const y = currentImageValue.convertedPolygons[polygonIndex][index + 1];
-
-	// convert the points to the original coordinates
-	const originalPoints = convertStageCoordinatePointsToOriginal(
-		[x, y],
-		currentImageValue.scale,
-		currentImageValue.origin.width,
-		currentImageValue.origin.height,
-		MAX_WIDTH_LARGE,
-		MAX_HEIGHT_LARGE
-	);
-
-	// Update points in the current snapshot
-	if (!currentImage) return;
-	const currentImageId = currentImageValue.origin.id;
-	if (currentImageId === undefined) return;
-
-	// Try to utilize copy as reference to save the memory, only deepy copy at the root of changes
-	// create copy of polygonPoints
-	const originCurrentImage = get(images)[currentImageId];
-	const newPolygonPoints = [...originCurrentImage.origin.polygonPoints];
-	// deep copy of the points
-	newPolygonPoints[polygonIndex] = {
-		...newPolygonPoints[polygonIndex],
-		points: [
-			...newPolygonPoints[polygonIndex].points.slice(0, index),
-			originalPoints[0],
-			originalPoints[1],
-			...newPolygonPoints[polygonIndex].points.slice(index + 2),
-		],
-	};
-	newPolygonPoints[polygonIndex].status = "changed";
-
-	// create copy of origin
-	const newOrigin = { ...originCurrentImage.origin };
-	newOrigin.polygonPoints = newPolygonPoints;
-
-	// create copy of ImageData
-	const newImageData = { ...originCurrentImage };
-	newImageData.origin = newOrigin;
-
-	// create copy of images
-	const newSnapshot = [...get(images)];
-	newSnapshot[currentImageId] = newImageData;
-
-	// update the convertedPolygons
-	const newConvertedPolygons = newImageData.convertedPolygons.slice();
-	newConvertedPolygons[polygonIndex] = convertOriginalPointsToStageCoordinates(
-		newPolygonPoints[polygonIndex].points,
-		get(images)[currentImageId].scale,
-		newImageData.origin.width,
-		newImageData.origin.height,
-		MAX_WIDTH_SMALL,
-		MAX_HEIGHT_SMALL
-	);
-
-	newImageData.convertedPolygons = newConvertedPolygons;
-	console.log(get(currentImage)?.convertedPolygons[polygonIndex][index]);
-
-	addSnapshot(newSnapshot);
-
-	// // update currentImage
-	// currentImage.update((value) => {
-	// 	if (value === undefined) return;
-	// 	value.origin.polygonPoints = newPolygonPoints;
-	// 	return value;
-	// });
-
-	// console.log(get(currentImage)?.convertedPolygons[polygonIndex][index]);
 };
 
 export const actionSaveNewPolyonAdded = (
@@ -223,58 +138,15 @@ export const actionSaveNewPolyonAdded = (
 	return newImageData;
 };
 
-export const actionDeletePolygon = (
-	currentImage: Writable<ImageData | undefined>,
-	polygonIndex: number
-) => {
-	const currentImageV = get(currentImage);
-	if (!currentImageV) return;
-
-	// UPDATE IMAGES
-	const currentImageId = currentImageV.origin.id;
-	const currentImageData = get(images)[currentImageId];
-	const newPolygons = [...currentImageData.origin.polygonPoints];
-	const newPolygon = { ...newPolygons[polygonIndex] };
-	newPolygon.status = "deleted";
-	newPolygons[polygonIndex] = newPolygon;
-	// create copy of origin
-	const newOrigin = { ...currentImageData.origin };
-	newOrigin.polygonPoints = newPolygons;
-	// create copy of ImageData
-	const newImageData = { ...currentImageData };
-	newImageData.origin = newOrigin;
-	// create copy of images
-	const newSnapshot = [...get(images)];
-	newSnapshot[currentImageId] = newImageData;
-	addSnapshot(newSnapshot);
-	console.log(
-		"before",
-		get(snapshots)[get(snapshots).length - 2][currentImageId].origin.polygonPoints
-	);
-	console.log(
-		"updated",
-		get(snapshots)[get(snapshots).length - 1][currentImageId].origin.polygonPoints
-	);
-
-	// UPDATE CURRENT IMAGE
-	currentImage.update((value) => {
-		if (value === undefined) return;
-		value.origin.polygonPoints = newPolygons;
-		return value;
-	});
-};
-
 export const actionSaveLabelChanges = (
-	currentImage: Writable<ImageData | undefined>,
+	currentImage: ImageData | undefined,
 	polygonIndex: number,
 	replaceLabel: string
 ) => {
-	console.log("save label changes");
-	const currentImageV = get(currentImage);
+	if (!currentImage) return;
 
 	// Update points in the current snapshot
-	if (!currentImageV) return;
-	const currentImageId = currentImageV.origin.id;
+	const currentImageId = currentImage.origin.id;
 
 	const originCurrentImage = get(images)[currentImageId];
 	const newPolygonPoints = [...originCurrentImage.origin.polygonPoints];
@@ -299,10 +171,11 @@ export const actionSaveLabelChanges = (
 	addSnapshot(newSnapshot);
 
 	// update currentImage
-	currentImage.update((value) => {
-		if (value === undefined) return;
-		value.origin.polygonPoints[polygonIndex].label = replaceLabel;
-		value.origin.polygonPoints[polygonIndex].status = "changed";
-		return value;
-	});
+	// currentImage.origin.polygonPoints[polygonIndex].label = replaceLabel;
+	// currentImage.origin.polygonPoints[polygonIndex].status = "changed";
+
+	currentImage = {
+		...currentImage,
+		origin: newOrigin,
+	};
 };

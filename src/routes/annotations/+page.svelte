@@ -2,14 +2,7 @@
 	import { onMount } from "svelte";
 	import { parseCVATXML, updateCVATXML } from "./parse";
 	import { Stage, Layer, Line, Circle, Image, Group, Text, Rect } from "svelte-konva";
-	import {
-		snapshots,
-		images,
-		currentImage,
-		addSnapshot,
-		actionSaveAnnotationChanges,
-		actionSaveNewPolyonAdded,
-	} from "./actions";
+	import { snapshots, images, addSnapshot, actionSaveNewPolyonAdded } from "./actions";
 	import Icon from "@iconify/svelte";
 	import type {
 		LabelInfo,
@@ -30,6 +23,7 @@
 		getRatio,
 		validatePolygonPoints,
 		addTransparency,
+		convertStageCoordinatePointsToOriginal,
 	} from "./utils";
 
 	import {
@@ -45,7 +39,7 @@
 	let currentLayerFocused = false;
 	let doneLoading = false;
 
-	$: currentImageValue = $currentImage;
+	let currentImage: ImageData | undefined = undefined;
 	let labelPositions: labelAbsolutePosition[] = [];
 	let labelsInfo: Map<string, LabelInfo> = new Map();
 	let imageElements: ImageInfo[] = [];
@@ -146,11 +140,11 @@
 		doneLoading = true;
 	}
 
-	$: if (currentImageValue) {
+	$: if (currentImage) {
 		labelPositions = getLabelPosition(
-			{ width: currentImageValue.scaledWidth, height: currentImageValue.scaledHeight },
+			{ width: currentImage.scaledWidth, height: currentImage.scaledHeight },
 			[MAX_WIDTH_LARGE, MAX_HEIGHT_LARGE],
-			get(currentImage),
+			currentImage,
 			10,
 			0.3,
 			12
@@ -161,7 +155,7 @@
 		currentImageIndex = image_info.origin.id;
 		currentLayer = -1;
 
-		currentImage.set(undefined);
+		currentImage = undefined;
 		const currentImageTemp = {
 			...JSON.parse(JSON.stringify(image_info)),
 			convertedPolygons: [],
@@ -192,7 +186,7 @@
 							MAX_HEIGHT_LARGE
 						)
 				);
-				currentImage.set(currentImageTemp);
+				currentImage = currentImageTemp;
 			}
 
 			// set up states for lock and visibility
@@ -202,12 +196,7 @@
 		};
 	}
 
-	function handleDragMoveCompletePolygon(
-		currentImage: ImageData | undefined,
-		polygonIndex: number,
-		index: number,
-		event: CustomEvent
-	) {
+	function handleDragMoveCompletePolygon(polygonIndex: number, index: number, event: CustomEvent) {
 		const curGroup = event.detail.currentTarget;
 
 		if (!currentImage) return;
@@ -233,6 +222,12 @@
 			MAX_HEIGHT_LARGE
 		);
 
+		console.log(
+			"last ",
+			currentImage.convertedPolygons[polygonIndex][index],
+			currentImage.convertedPolygons[polygonIndex][index + 1]
+		);
+
 		// check if the point is within the image
 		if (x < firstPoint[0] || x > lastPoint[0] || y < firstPoint[1] || y > lastPoint[1]) {
 			console.log("invalid points");
@@ -249,7 +244,12 @@
 			currentImage.convertedPolygons[polygonIndex][index] = x;
 			currentImage.convertedPolygons[polygonIndex][index + 1] = y;
 		}
-		currentImage.changed = true;
+
+		console.log(
+			"current ",
+			currentImage.convertedPolygons[polygonIndex][index],
+			currentImage.convertedPolygons[polygonIndex][index + 1]
+		);
 	}
 
 	function saveChanges() {
@@ -291,7 +291,7 @@
 		if (ant_newPoints.length > 4) {
 			const newImageData = actionSaveNewPolyonAdded(
 				ant_newPoints,
-				get(currentImage),
+				currentImage,
 				MAX_WIDTH_LARGE,
 				MAX_HEIGHT_LARGE,
 				ant_currentLabel
@@ -304,6 +304,89 @@
 		ant_saving = false;
 		ant_modeOn = false;
 	}
+
+	const actionSaveAnnotationChanges = (
+		event: CustomEvent,
+		polygonIndex: number,
+		index: number,
+		MAX_WIDTH_LARGE: number,
+		MAX_HEIGHT_LARGE: number,
+		MAX_WIDTH_SMALL: number,
+		MAX_HEIGHT_SMALL: number
+	) => {
+		if (!currentImage) return;
+
+		const x = currentImage.convertedPolygons[polygonIndex][index];
+		const y = currentImage.convertedPolygons[polygonIndex][index + 1];
+
+		// convert the points to the original coordinates
+		const originalPoints = convertStageCoordinatePointsToOriginal(
+			[x, y],
+			currentImage.scale,
+			currentImage.origin.width,
+			currentImage.origin.height,
+			MAX_WIDTH_LARGE,
+			MAX_HEIGHT_LARGE
+		);
+
+		// Update points in the current snapshot
+		if (!currentImage) return;
+		const currentImageId = currentImage.origin.id;
+		if (currentImageId === undefined) return;
+
+		// Try to utilize copy as reference to save the memory, only deepy copy at the root of changes
+		// create copy of polygonPoints
+		const originCurrentImage = get(images)[currentImageId];
+		const newPolygonPoints = [...originCurrentImage.origin.polygonPoints];
+		// deep copy of the points
+		newPolygonPoints[polygonIndex] = {
+			...newPolygonPoints[polygonIndex],
+			points: [
+				...newPolygonPoints[polygonIndex].points.slice(0, index),
+				originalPoints[0],
+				originalPoints[1],
+				...newPolygonPoints[polygonIndex].points.slice(index + 2),
+			],
+		};
+		newPolygonPoints[polygonIndex].status = "changed";
+
+		// create copy of origin
+		const newOrigin = { ...originCurrentImage.origin };
+		newOrigin.polygonPoints = newPolygonPoints;
+
+		// create copy of ImageData
+		const newImageData = { ...originCurrentImage };
+		newImageData.origin = newOrigin;
+
+		// create copy of images
+		const newSnapshot = [...get(images)];
+		newSnapshot[currentImageId] = newImageData;
+
+		// update the convertedPolygons
+		const newConvertedPolygons = newImageData.convertedPolygons.slice();
+		newConvertedPolygons[polygonIndex] = convertOriginalPointsToStageCoordinates(
+			newPolygonPoints[polygonIndex].points,
+			get(images)[currentImageId].scale,
+			newImageData.origin.width,
+			newImageData.origin.height,
+			MAX_WIDTH_SMALL,
+			MAX_HEIGHT_SMALL
+		);
+
+		newImageData.convertedPolygons = newConvertedPolygons;
+		console.log(
+			"end",
+			currentImage.convertedPolygons[polygonIndex][index],
+			currentImage.convertedPolygons[polygonIndex][index + 1]
+		);
+
+		addSnapshot(newSnapshot);
+
+		// update currentImage
+		// currentImage.origin.polygonPoints = newPolygonPoints;
+
+		// console.log(get(currentImage)?.convertedPolygons[polygonIndex][index]);
+	};
 </script>
 
 <div class="flex-start flex h-full flex-col gap-[5px]">
@@ -398,32 +481,32 @@
 		</div>
 		<div class="justify-top relative flex h-full w-[60%] flex-col items-center">
 			<AnnotationTools {labelsInfo} bind:ant_modeOn bind:ant_currentLabel bind:ant_saving />
-			{#if currentImageValue}
+			{#if currentImage}
 				<div class="flex items-center justify-center" role="button" tabindex="-1">
 					<Stage
 						class="inline-block"
 						config={{ width: MAX_WIDTH_LARGE, height: MAX_HEIGHT_LARGE }}
 						on:click={(e) => {
 							console.log(e);
-							ant_modeOn && handleAnnotate(e, currentImageValue, MAX_WIDTH_LARGE, MAX_HEIGHT_LARGE);
+							ant_modeOn && handleAnnotate(e, currentImage, MAX_WIDTH_LARGE, MAX_HEIGHT_LARGE);
 						}}
 					>
-						{#if currentImageValue.imgObj}
+						{#if currentImage.imgObj}
 							<Layer>
 								<Image
 									config={{
-										image: currentImageValue.imgObj,
-										x: (MAX_WIDTH_LARGE - currentImageValue.scaledWidth) / 2,
-										y: (MAX_HEIGHT_LARGE - currentImageValue.scaledHeight) / 2,
-										width: currentImageValue.scaledWidth,
-										height: currentImageValue.scaledHeight,
+										image: currentImage.imgObj,
+										x: (MAX_WIDTH_LARGE - currentImage.scaledWidth) / 2,
+										y: (MAX_HEIGHT_LARGE - currentImage.scaledHeight) / 2,
+										width: currentImage.scaledWidth,
+										height: currentImage.scaledHeight,
 										listening: false,
 									}}
 								/>
 							</Layer>
 							<Layer>
-								{#each currentImageValue.convertedPolygons as polygon, i0}
-									{#if currentImageValue.origin.polygonPoints[i0].status !== "deleted"}
+								{#each currentImage.convertedPolygons as polygon, i0}
+									{#if currentImage.origin.polygonPoints[i0].status !== "deleted"}
 										{#if $isVisible[i0]}
 											<Group
 												config={{ listening: !ant_modeOn }}
@@ -442,15 +525,13 @@
 												<Line
 													config={{
 														points: polygon,
-														stroke: labelsInfo?.get(
-															currentImageValue.origin.polygonPoints[i0].label
-														)?.color,
+														stroke: labelsInfo?.get(currentImage.origin.polygonPoints[i0].label)
+															?.color,
 														strokeWidth: 2,
 														closed: true,
 														lineJoint: "round",
 														fill: addTransparency(
-															labelsInfo?.get(currentImageValue.origin.polygonPoints[i0].label)
-																?.color,
+															labelsInfo?.get(currentImage.origin.polygonPoints[i0].label)?.color,
 															currentLayer === i0 ? 0.7 : 0
 														),
 														hitStrokeWidth: 0,
@@ -461,15 +542,16 @@
 														{#if i1 % 2 === 0}
 															<Group
 																config={{
+																	x: 0,
+																	y: 0,
 																	draggable: true,
 																}}
 																on:dragmove={(event) => {
-																	handleDragMoveCompletePolygon(currentImageValue, i0, i1, event);
+																	handleDragMoveCompletePolygon(i0, i1, event);
 																}}
 																on:dragend={(event) => {
 																	actionSaveAnnotationChanges(
 																		event,
-																		currentImageValue,
 																		i0,
 																		i1,
 																		MAX_WIDTH_LARGE,
@@ -482,10 +564,10 @@
 																{#if !$isLocked[i0]}
 																	<Circle
 																		config={{
-																			x: currentImageValue.convertedPolygons[i0][i1],
-																			y: currentImageValue.convertedPolygons[i0][i1 + 1],
+																			x: currentImage.convertedPolygons[i0][i1],
+																			y: currentImage.convertedPolygons[i0][i1 + 1],
 																			fill: labelsInfo?.get(
-																				currentImageValue.origin.polygonPoints[i0].label
+																				currentImage.origin.polygonPoints[i0].label
 																			)?.color,
 																			radius: 4,
 																			stroke: "black",
@@ -503,7 +585,7 @@
 																				labelPositions[i0].endPos[1],
 																			],
 																			stroke: labelsInfo?.get(
-																				currentImageValue.origin.polygonPoints[i0].label
+																				currentImage.origin.polygonPoints[i0].label
 																			)?.color,
 																			strokeWidth: 2,
 																		}}
@@ -531,23 +613,21 @@
 																		<Rect
 																			config={{
 																				width:
-																					currentImageValue.origin.polygonPoints[i0].label.length *
-																						6 +
+																					currentImage.origin.polygonPoints[i0].label.length * 6 +
 																					10,
 																				height: 16,
 																				fill: "white",
 																				stroke: labelsInfo?.get(
-																					currentImageValue.origin.polygonPoints[i0].label
+																					currentImage.origin.polygonPoints[i0].label
 																				)?.color,
 																				strokeWidth: 2,
 																			}}
 																		/>
 																		<Text
 																			config={{
-																				text: currentImageValue.origin.polygonPoints[i0].label,
+																				text: currentImage.origin.polygonPoints[i0].label,
 																				width:
-																					currentImageValue.origin.polygonPoints[i0].label.length *
-																						6 +
+																					currentImage.origin.polygonPoints[i0].label.length * 6 +
 																					10,
 																				align: "center",
 																				y: 16 / 2 - 12 / 2,
@@ -601,7 +681,7 @@
 			{/if}
 		</div>
 		<div class="flex-1 border-[1px] border-black">
-			<LayersCol bind:labelsInfo bind:currentLayer bind:currentLayerFocused />
+			<LayersCol bind:currentImage bind:labelsInfo bind:currentLayer bind:currentLayerFocused />
 		</div>
 	</div>
 </div>
