@@ -542,8 +542,8 @@
 														{#if i1 % 2 === 0}
 															<Group
 																config={{
-																	x: 0,
-																	y: 0,
+																	x: currentImage.convertedPolygons[i0][i1],
+																	y: currentImage.convertedPolygons[i0][i1 + 1],
 																	draggable: true,
 																}}
 																on:dragmove={(event) => {
@@ -564,8 +564,6 @@
 																{#if !$isLocked[i0]}
 																	<Circle
 																		config={{
-																			x: currentImage.convertedPolygons[i0][i1],
-																			y: currentImage.convertedPolygons[i0][i1 + 1],
 																			fill: labelsInfo?.get(
 																				currentImage.origin.polygonPoints[i0].label
 																			)?.color,
@@ -579,10 +577,12 @@
 																	<Line
 																		config={{
 																			points: [
-																				polygon[i1],
-																				polygon[i1 + 1],
-																				labelPositions[i0].endPos[0],
-																				labelPositions[i0].endPos[1],
+																				0,
+																				0,
+																				labelPositions[i0].endPos[0] -
+																					currentImage.convertedPolygons[i0][i1],
+																				labelPositions[i0].endPos[1] -
+																					currentImage.convertedPolygons[i0][i1 + 1],
 																			],
 																			stroke: labelsInfo?.get(
 																				currentImage.origin.polygonPoints[i0].label
