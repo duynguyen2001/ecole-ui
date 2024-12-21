@@ -71,20 +71,29 @@ export const getLabelPosition = (
 		if (pos === "top-left") {
 			const temp = {
 				pointIndex: index,
-				endPos: [points[index] - inclinePixel, imageEdges.top - distanceRatio * distanceToMiddle],
+				endPos: [
+					-inclinePixel,
+					imageEdges.top - distanceRatio * distanceToMiddle - points[index + 1],
+				],
 				textPos: [
-					points[index] - inclinePixel - (label.length * 6) / 2,
-					imageEdges.top - distanceRatio * distanceToMiddle - fontSize * 1.1,
+					-inclinePixel - (label.length * 6) / 2,
+					imageEdges.top - distanceRatio * distanceToMiddle - fontSize * 1.1 - points[index + 1],
 				],
 			};
 			finalPositions.push(temp);
 		} else if (pos === "top-right") {
 			const temp = {
 				pointIndex: index,
-				endPos: [points[index] + inclinePixel, imageEdges.top - distanceRatio * distanceToMiddle],
+				endPos: [
+					inclinePixel,
+					imageEdges.top - distanceRatio * distanceToMiddle - points[index + 1],
+				],
 				textPos: [
-					points[index] + inclinePixel - (label.length * 6) / 2,
-					imageEdges.top - distanceRatio * distanceToMiddle - (fontSize * 1.1) / 2,
+					inclinePixel - (label.length * 6) / 2,
+					imageEdges.top -
+						distanceRatio * distanceToMiddle -
+						(fontSize * 1.1) / 2 -
+						points[index + 1],
 				],
 			};
 			finalPositions.push(temp);
@@ -92,12 +101,12 @@ export const getLabelPosition = (
 			const temp = {
 				pointIndex: index,
 				endPos: [
-					points[index] - inclinePixel,
-					imageEdges.bottom + distanceRatio * distanceToMiddle,
+					-inclinePixel,
+					imageEdges.bottom + distanceRatio * distanceToMiddle - points[index + 1],
 				],
 				textPos: [
-					points[index] - inclinePixel - (label.length * 6) / 2,
-					imageEdges.bottom + distanceRatio * distanceToMiddle,
+					-inclinePixel - (label.length * 6) / 2,
+					imageEdges.bottom + distanceRatio * distanceToMiddle - points[index + 1],
 				],
 			};
 			finalPositions.push(temp);
@@ -105,25 +114,25 @@ export const getLabelPosition = (
 			const temp = {
 				pointIndex: index,
 				endPos: [
-					points[index] + inclinePixel,
-					imageEdges.bottom + distanceRatio * distanceToMiddle,
+					inclinePixel,
+					imageEdges.bottom + distanceRatio * distanceToMiddle - points[index + 1],
 				],
 				textPos: [
-					points[index] + inclinePixel - (label.length * 6) / 2,
-					imageEdges.bottom + distanceRatio * distanceToMiddle,
+					inclinePixel - (label.length * 6) / 2,
+					imageEdges.bottom + distanceRatio * distanceToMiddle - points[index + 1],
 				],
 			};
 			finalPositions.push(temp);
 		} else if (pos === "left") {
 			const temp = {
 				pointIndex: index,
-				endPos: [
-					imageEdges.left - distanceRatio * distanceToMiddle,
-					points[index + 1] - inclinePixel,
-				],
+				endPos: [imageEdges.left - distanceRatio * distanceToMiddle - points[index], -inclinePixel],
 				textPos: [
-					imageEdges.left - distanceRatio * distanceToMiddle - (label.length * 6) / 2,
-					points[index + 1] - inclinePixel - (fontSize * 1.1) / 2,
+					imageEdges.left -
+						distanceRatio * distanceToMiddle -
+						(label.length * 6) / 2 -
+						points[index],
+					-inclinePixel - (fontSize * 1.1) / 2,
 				],
 			};
 			finalPositions.push(temp);
@@ -131,12 +140,15 @@ export const getLabelPosition = (
 			const temp = {
 				pointIndex: index,
 				endPos: [
-					imageEdges.right + distanceRatio * distanceToMiddle,
-					points[index + 1] - inclinePixel,
+					imageEdges.right + distanceRatio * distanceToMiddle - points[index],
+					-inclinePixel,
 				],
 				textPos: [
-					imageEdges.right + distanceRatio * distanceToMiddle - (label.length * 6) / 2,
-					points[index + 1] - inclinePixel - (fontSize * 1.1) / 2,
+					imageEdges.right +
+						distanceRatio * distanceToMiddle -
+						(label.length * 6) / 2 -
+						points[index],
+					-inclinePixel - (fontSize * 1.1) / 2,
 				],
 			};
 			finalPositions.push(temp);
