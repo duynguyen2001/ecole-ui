@@ -11,7 +11,9 @@ import { v4 } from "uuid";
 import { authCondition } from "$lib/server/auth";
 import { usageLimits } from "$lib/server/usageLimits";
 import { MetricsServer } from "$lib/server/metrics";
-import { ECOLE_PASSWORD } from "$env/static/private";
+import { env } from "$env/dynamic/private";
+
+const ECOLE_PASSWORD = env.ECOLE_PASSWORD;
 
 export const POST: RequestHandler = async ({ locals, request, url, cookies }) => {
 	const body = await request.text();

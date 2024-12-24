@@ -10,9 +10,9 @@ import { ObjectId } from "mongodb";
 import type { ConvSidebar } from "$lib/types/ConvSidebar";
 import { allTools } from "$lib/server/tools";
 import { MetricsServer } from "$lib/server/metrics";
-import { ECOLE_PASSWORD } from "$env/static/private";
 import { redirect } from "@sveltejs/kit";
 
+const ECOLE_PASSWORD = env.ECOLE_PASSWORD;
 export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) => {
 	depends(UrlDependency.ConversationList);
 

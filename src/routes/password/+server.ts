@@ -1,5 +1,8 @@
 import type { RequestHandler } from "@sveltejs/kit";
-import { ECOLE_PASSWORD } from "$env/static/private";
+import { env } from "$env/dynamic/private";
+
+
+const ECOLE_PASSWORD = env.ECOLE_PASSWORD;
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = await request.json();

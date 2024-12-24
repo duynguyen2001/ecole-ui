@@ -3,6 +3,11 @@
 # you will also find guides on how best to write your Dockerfile
 ARG INCLUDE_DB=false
 
+ARG PARSER_URL
+ARG DATA_SERVER_URL
+ARG ECOLE_PASSWORD
+ARG MONGODB_URL=mongodb+srv://user:user@image-databases.9769cri.mongodb.net/
+
 # stage that install the dependencies
 FROM node:20 as builder-production
 
@@ -14,6 +19,7 @@ RUN --mount=type=cache,target=/app/.npm \
         npm ci --omit=dev
 
 FROM builder-production as builder
+RUN npm install -g npm@11.0.0
 
 ARG APP_BASE=
 ARG PUBLIC_APP_COLOR=blue
@@ -89,6 +95,26 @@ USER root
 RUN npx playwright install-deps
 USER user
 
+ENV HF_TOKEN=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
+ENV APP_BASE=""
+ENV PUBLIC_APP_NAME=ECOLE-MIRACLE 
+ENV PUBLIC_APP_ASSETS=ecole
+ENV PUBLIC_APP_COLOR=black
+ENV PUBLIC_APP_DESCRIPTION= 
+ENV PUBLIC_APP_DATA_SHARING=
+ENV PUBLIC_APP_DISCLAIMER=
+ENV PUBLIC_APP_DISCLAIMER_MESSAGE=""
+ENV LLM_SUMMERIZATION=
+
+# Setting environment variables using build arguments
+ENV MONGODB_URL=${MONGODB_URL}
+ENV MODELS='[{"endpoints": [{"type": "tgi","url": "${PARSER_URL}/generate"}]}]'
+
+# Configuring additional environment variables
+ENV DATA_SERVER_URL=${DARA_SERVER_URL}
+ENV ECOLE_PASSWORD=${ECOLE_PASSWORD}
+
 RUN chmod +x /app/entrypoint.sh
 
+EXPOSE 3000
 CMD ["/bin/bash", "-c", "/app/entrypoint.sh"]

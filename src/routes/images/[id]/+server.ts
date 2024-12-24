@@ -1,6 +1,6 @@
 import type { RequestHandler } from "@sveltejs/kit";
-import { DATA_SERVER_URL } from "$env/static/private";
-
+import { env } from "$env/dynamic/private";
+const DATA_SERVER_URL = env.DATA_SERVER_URL;
 export const GET: RequestHandler = async ({ params }) => {
 	try {
 		const imageUrl = DATA_SERVER_URL;

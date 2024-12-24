@@ -1,7 +1,9 @@
-import { DATA_SERVER_URL } from "$env/static/private";
 import type { RequestEvent } from "@sveltejs/kit";
 import { error } from "@sveltejs/kit";
 import fetch from "node-fetch";
+import { env } from "$env/dynamic/private";
+
+const DATA_SERVER_URL = env.DATA_SERVER_URL;
 
 export async function GET(event: RequestEvent) {
 	const { id } = event.params;

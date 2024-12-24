@@ -4,9 +4,12 @@ import { error } from "@sveltejs/kit";
 import { authCondition } from "$lib/server/auth";
 import { UrlDependency } from "$lib/types/UrlDependency";
 import { convertLegacyConversation } from "$lib/utils/tree/convertLegacyConversation.js";
-import { ECOLE_PASSWORD } from "$env/static/private";
+import { env } from "$env/dynamic/private";
 import { redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
+
+
+const ECOLE_PASSWORD = env.ECOLE_PASSWORD;
 
 export const load = async ({ params, depends, locals, cookies }) => {
 	let conversation;

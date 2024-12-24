@@ -1,5 +1,7 @@
-import { DATA_SERVER_URL } from "$env/static/private";
 import type { RequestHandler } from "@sveltejs/kit";
+import { env } from "$env/dynamic/private";
+
+const DATA_SERVER_URL = env.DATA_SERVER_URL;
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
