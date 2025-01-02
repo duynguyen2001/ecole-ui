@@ -80,7 +80,7 @@
 	}
 </script>
 
-<div class="flex h-full w-full flex-col">
+<div class="flex h-full w-full flex-col gap-[4rem]">
 	<!-- {#if warning}
 		<Alert>
 			<div class="flex items-center gap-3">
@@ -96,46 +96,48 @@
 			</div>
 		</Alert>
 	{/if} -->
-	<div class="h-1/2 overflow-y-auto">
+	<div class="h-[33vh]">
 		<div class="bg-[#D9D9D9] p-[10px]">Layers</div>
 		{#if $currentImage && labelsInfo}
-			<div class="flex flex-col gap-[1px] px-[10px] py-[10px]">
-				{#each $currentImage.origin.polygonPoints as polygon, i}
-					{#if currentImage && polygon.status !== "deleted"}
-						<div
-							data-layer={i}
-							class={`gap-end relative flex flex-row items-center justify-between rounded-[5px] border-[2px] border-solid p-[10px] ${
-								i === currentLayer ? "border-black" : "border-transparent hover:border-black"
-							}`}
-							style={`background-color: ${labelsInfo?.get(polygon.label)?.color}; `}
-							role="cell"
-							tabindex="0"
-						>
-							<div class="absolute left-[3px] top-[1px] text-[8px]">{i + 1}</div>
-							<select
-								class="rounded-sm text-[12px]"
-								id="layer-select"
-								bind:value={polygon.label}
-								on:change={(e) => onNameChange(e, polygon, i)}
+			<div class="my-[0.5rem] h-full overflow-y-auto">
+				<div class="flex flex-col gap-[1px] px-[10px] py-[10px]">
+					{#each $currentImage.origin.polygonPoints as polygon, i}
+						{#if currentImage && polygon.status !== "deleted"}
+							<div
+								data-layer={i}
+								class={`gap-end relative flex flex-row items-center justify-between rounded-[5px] border-[2px] border-solid p-[10px] ${
+									i === currentLayer ? "border-black" : "border-transparent hover:border-black"
+								}`}
+								style={`background-color: ${labelsInfo?.get(polygon.label)?.color}; `}
+								role="cell"
+								tabindex="0"
 							>
-								{#each labels as label}
-									<option value={label}>{label}</option>
-								{/each}
-							</select>
-							<div class="flex flex-row items-center gap-[10px]">
-								<button on:click={() => changeLockState(i)}>
-									<Icon icon="mdi:lock" />
-								</button>
-								<button on:click={() => changeVisibility(i)}><Icon icon="mdi:eye" /></button>
-								<button on:click={() => actionDeletePolygon(i)}><Icon icon="mdi:trash" /></button>
+								<div class="absolute left-[3px] top-[1px] text-[8px]">{i + 1}</div>
+								<select
+									class="rounded-sm text-[12px]"
+									id="layer-select"
+									bind:value={polygon.label}
+									on:change={(e) => onNameChange(e, polygon, i)}
+								>
+									{#each labels as label}
+										<option value={label}>{label}</option>
+									{/each}
+								</select>
+								<div class="flex flex-row items-center gap-[10px]">
+									<button on:click={() => changeLockState(i)}>
+										<Icon icon="mdi:lock" />
+									</button>
+									<button on:click={() => changeVisibility(i)}><Icon icon="mdi:eye" /></button>
+									<button on:click={() => actionDeletePolygon(i)}><Icon icon="mdi:trash" /></button>
+								</div>
 							</div>
-						</div>
-					{/if}
-				{/each}
+						{/if}
+					{/each}
+				</div>
 			</div>
 		{/if}
 	</div>
-	<div class="flex h-1/2 flex-col">
+	<div class="flex flex-1 flex-col">
 		<div class="bg-[#D9D9D9] p-[10px]">Labels</div>
 		<input
 			class="w-full border-b-[2px] border-solid border-[#D9D9D9] p-[5px] text-[12px]"
@@ -143,19 +145,23 @@
 			placeholder="Add a new label"
 			on:keydown={addNewLabel}
 		/>
-		<div class="my-[15px] flex flex-1 flex-col gap-[10px] overflow-y-auto px-[20px] text-[12px]">
-			{#each labelsInfo.entries() as [label, info]}
-				<div class="flex flex-row items-center gap-[10px]">
-					<input
-						class="h-5 w-5"
-						id="color-picker"
-						type="color"
-						value={info.color}
-						on:change={changeColor(label)}
-					/>
-					<span>{label}</span>
-				</div>
-			{/each}
+		<div class="h-[30vh]">
+			<div
+				class="my-[0.5rem] flex h-full flex-1 flex-col gap-[10px] overflow-y-auto px-[20px] text-[12px]"
+			>
+				{#each labelsInfo.entries() as [label, info]}
+					<div class="flex flex-row items-center gap-[10px]">
+						<input
+							class="h-5 w-5"
+							id="color-picker"
+							type="color"
+							value={info.color}
+							on:change={changeColor(label)}
+						/>
+						<span>{label}</span>
+					</div>
+				{/each}
+			</div>
 		</div>
 	</div>
 </div>

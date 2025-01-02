@@ -294,96 +294,125 @@
 </script>
 
 <div class="flex-start flex h-full flex-col gap-[5px]">
-	<!-- <div class="top-section">
-		<h1 class="text-[2rem]">Annotations</h1>
-		<div class="flex flex-row gap-[5px]">
-			<div class="file-upload">
-				<input type="file" accept="image/*" on:change={handleFileChange} />
-			</div>
-			<button class="rounded border-[1px] border-black px-[5px]" on:click={completePolygon}
-				>Complete Polygon</button
-			>`
-			<button class="rounded border-[1px] border-black px-[5px]" on:click={clearPolygons}
-				>Clear Polygons</button
-			>
-		</div>
-	</div> -->
-	<div class="flex h-full w-full grow flex-row gap-[30px]">
-		<div class="relative h-[90vh]">
-			<div class="h-full overflow-y-auto">
-				<div class="grid grid-cols-2 gap-[5px]">
-					{#if doneLoading && labelsInfo}
-						{#each $images as image_info}
-							<div
-								class=" mx-[4px] mt-[4px] flex flex-1 items-center justify-center"
-								role="button"
-								tabindex="-1"
-							>
-								<div
-									class=" focus:outline-none focus:ring-2 focus:ring-black"
-									tabindex="0"
-									role="button"
-								>
-									<Stage
-										class=" border-[1px] border-black"
-										config={{ width: MAX_HEIGHT_SMALL, height: MAX_WIDTH_SMALL }}
-										on:click={() => handleClick(image_info)}
-									>
-										<Layer>
-											{#if image_info.imgObj}
-												<Image
-													config={{
-														image: image_info.imgObj,
-														x: (MAX_WIDTH_SMALL - image_info.scaledWidth) / 2,
-														y: (MAX_HEIGHT_SMALL - image_info.scaledHeight) / 2,
-														width: image_info.scaledWidth,
-														height: image_info.scaledHeight,
-														listening: false,
-													}}
-												/>
-												{#each image_info.convertedPolygons as polygon, i0}
-													{#if image_info.origin.polygonPoints[i0].status !== "deleted"}
-														<Group>
-															<Line
-																config={{
-																	points: polygon,
-																	stroke: labelsInfo?.get(image_info.origin.polygonPoints[i0].label)
-																		?.color,
-																	strokeWidth: 2,
-																	closed: true,
-																	lineJoint: "round",
-																	fill: addTransparency(
-																		labelsInfo?.get(image_info.origin.polygonPoints[i0].label)
-																			?.color,
-																		0.5
-																	),
-																	hitStrokeWidth: 0,
-																}}
-															/>
-														</Group>
-													{/if}
-												{/each}
-											{/if}
-										</Layer>
-									</Stage>
-								</div>
-							</div>
-						{/each}
-					{/if}
+	<div class="flex h-full w-full grow flex-row">
+		<div class="relative flex h-full flex-1 flex-col border-r border-black">
+			<div>
+				<div
+					class="flex items-center justify-between bg-[#FFFEED] px-[0.8rem] py-[0.5rem] text-[1rem]"
+				>
+					<div>Current Dataset</div>
+					<Icon icon="grommet-icons:down" width="24" height="24" />
 				</div>
-				<button on:click={() => saveChanges()}>
-					<Icon
-						class="absolute right-[-50px] top-0 z-[1000]"
-						icon="mdi:content-save-edit"
-						width="35"
-						height="35"
-						color="#333333"
-						role="button"
-					/>
-				</button>
+				<div>
+					<div
+						class="flex flex-row items-center gap-[0.5rem] border-b border-t border-black px-[0.8rem] py-[0.3rem]"
+					>
+						<Icon class="mt-[2px]" icon="mdi:search" width="15" height="15" />
+						<input
+							type="text"
+							placeholder="Search"
+							class=" w-[90%] border-none text-[0.75rem] outline-none"
+						/>
+					</div>
+					<div
+						class="flex flex-col gap-[0.3rem] border-b border-black py-[0.3rem] pl-[0.8rem] text-[0.75rem]"
+					>
+						<div class="flex flex-row items-center gap-[0.3rem]">
+							<Icon icon="mdi:tick" width="12" height="12" />
+							<div>current dataset</div>
+						</div>
+						<div class="flex flex-row items-center gap-[0.3rem]">
+							<Icon class="invisible" icon="mdi:tick" width="12" height="12" />
+							<div>current dataset</div>
+						</div>
+						<div class="flex flex-row items-center gap-[0.3rem]">
+							<Icon class="invisible" icon="mdi:tick" width="12" height="12" />
+							<div>current dataset</div>
+						</div>
+						<div class="flex flex-row items-center gap-[0.3rem]">
+							<Icon class="invisible" icon="mdi:tick" width="12" height="12" />
+							<div>current dataset</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="h-[65vh]">
+				<div class="h-full overflow-y-auto">
+					<div class="grid grid-cols-2 gap-[5px]">
+						{#if doneLoading && labelsInfo}
+							{#each $images as image_info}
+								<div
+									class=" mx-[4px] mt-[4px] flex flex-1 items-center justify-center"
+									role="button"
+									tabindex="-1"
+								>
+									<div
+										class=" focus:outline-none focus:ring-2 focus:ring-black"
+										tabindex="0"
+										role="button"
+									>
+										<Stage
+											class=" border-[1px] border-black"
+											config={{ width: MAX_HEIGHT_SMALL, height: MAX_WIDTH_SMALL }}
+											on:click={() => handleClick(image_info)}
+										>
+											<Layer>
+												{#if image_info.imgObj}
+													<Image
+														config={{
+															image: image_info.imgObj,
+															x: (MAX_WIDTH_SMALL - image_info.scaledWidth) / 2,
+															y: (MAX_HEIGHT_SMALL - image_info.scaledHeight) / 2,
+															width: image_info.scaledWidth,
+															height: image_info.scaledHeight,
+															listening: false,
+														}}
+													/>
+													{#each image_info.convertedPolygons as polygon, i0}
+														{#if image_info.origin.polygonPoints[i0].status !== "deleted"}
+															<Group>
+																<Line
+																	config={{
+																		points: polygon,
+																		stroke: labelsInfo?.get(
+																			image_info.origin.polygonPoints[i0].label
+																		)?.color,
+																		strokeWidth: 2,
+																		closed: true,
+																		lineJoint: "round",
+																		fill: addTransparency(
+																			labelsInfo?.get(image_info.origin.polygonPoints[i0].label)
+																				?.color,
+																			0.5
+																		),
+																		hitStrokeWidth: 0,
+																	}}
+																/>
+															</Group>
+														{/if}
+													{/each}
+												{/if}
+											</Layer>
+										</Stage>
+									</div>
+								</div>
+							{/each}
+						{/if}
+					</div>
+					<button on:click={() => saveChanges()}>
+						<Icon
+							class="absolute right-[-40px] top-0 z-[1000]"
+							icon="mdi:content-save-edit"
+							width="35"
+							height="35"
+							color="#333333"
+							role="button"
+						/>
+					</button>
+				</div>
 			</div>
 		</div>
-		<div class="justify-top relative flex h-full w-[60%] flex-col items-center">
+		<div class="justify-top relative flex h-full w-[60%] flex-col items-center p-[1rem]">
 			<AnnotationTools {labelsInfo} bind:ant_modeOn bind:ant_currentLabel bind:ant_saving />
 			{#if $currentImage}
 				<div class="flex items-center justify-center" role="button" tabindex="-1">
@@ -583,7 +612,7 @@
 				</div>
 			{/if}
 		</div>
-		<div class="flex-1 border-[1px] border-black">
+		<div class="flex-1 border-l border-black">
 			<LayersCol bind:labelsInfo bind:currentLayer bind:currentLayerFocused />
 		</div>
 	</div>

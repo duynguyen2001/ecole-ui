@@ -43,11 +43,8 @@
 </script>
 
 <div class="dropdown relative">
-	<button
-		on:click={toggleDropdown}
-		class="flex h-8 w-8 items-center justify-center rounded-full bg-black"
-	>
-		<!-- Replace with actual profile icon -->
+	<button on:click={toggleDropdown} class="flex h-10 w-10 items-center justify-center rounded-full">
+		<img src="/ecole/annotations/profile_square.jpg" alt="Profile Icon" class="rounded-full" />
 	</button>
 
 	{#if isOpen}
