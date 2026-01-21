@@ -21,11 +21,12 @@
 	import titleUpdate from "$lib/stores/titleUpdate";
 	import DisclaimerModal from "$lib/components/DisclaimerModal.svelte";
 	import ExpandNavigation from "$lib/components/ExpandNavigation.svelte";
+	import SAMDecoderPreloader from "$lib/components/SAMDecoderPreloader.svelte";
 
 	export let data;
 
 	let isNavOpen = false;
-	let isNavCollapsed = false;
+	let isNavCollapsed = true; // Keep sidebar collapsed by default
 
 	let errorToastTimeout: ReturnType<typeof setTimeout>;
 	let currentError: string | null;
@@ -224,5 +225,7 @@
 	{#if currentError}
 		<Toast message={currentError} />
 	{/if}
+	<!-- Preload SAM decoder in background -->
+	<SAMDecoderPreloader />
 	<slot />
 </div>

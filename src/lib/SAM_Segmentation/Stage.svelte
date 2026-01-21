@@ -75,7 +75,8 @@
 				{modelScale}
 			/>
 		</div>
-		{#if (savedMaskImgs && savedMaskImgs.length > 0) || (savedClicks && savedClicks.length > 0)}
+		<!-- InformationPanel hidden for simplified UI -->
+		<!-- {#if (savedMaskImgs && savedMaskImgs.length > 0) || (savedClicks && savedClicks.length > 0)}
 			<InformationPanel
 				{savedMaskImgs}
 				on:update={(event) => {
@@ -86,7 +87,7 @@
 					mask_description = event.detail.description;
 				}}
 			/>
-		{/if}
+		{/if} -->
 	</div>
 
 	<Toolbar
@@ -96,25 +97,15 @@
 		handleMinus={() => {
 			clickType = 0;
 		}}
-		handleSave={() => {
-			dispatch("save", {
-				id: current_image_id,
-				name: mask_name,
-				description: mask_description,
-			});
-			console.log("saved", savedClicks);
-		}}
 		handleRemove={() => {
 			dispatch("undo");
-		}}
-		handleDownload={() => {
-			dispatch("download");
 		}}
 		handleDelete={() => {
 			dispatch("delete", current_image_id);
 		}}
-		handleUpload={() => {
-			dispatch("upload");
+		handleSubmit={() => {
+			dispatch("submit");
 		}}
+		hasRegions={maskImg !== null}
 	/>
 </div>

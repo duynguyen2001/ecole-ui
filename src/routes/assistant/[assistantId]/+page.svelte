@@ -138,7 +138,7 @@
 				type="submit"
 				class=" w-full rounded-full bg-black px-4 py-3 font-semibold text-white"
 			>
-				Start chatting
+				Start Interaction With MIRACLE System
 			</button>
 		</form>
 	</dialog>

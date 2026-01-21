@@ -13,8 +13,8 @@ import { makeGeneralUpdate } from "../update";
 import type { MessageWebSearchUpdate } from "$lib/types/MessageUpdate";
 
 const listSchema = z.array(z.string()).default([]);
-const allowList = listSchema.parse(JSON5.parse(env.WEBSEARCH_ALLOWLIST));
-const blockList = listSchema.parse(JSON5.parse(env.WEBSEARCH_BLOCKLIST));
+const allowList = listSchema.parse(JSON5.parse(env.WEBSEARCH_ALLOWLIST || "[]"));
+const blockList = listSchema.parse(JSON5.parse(env.WEBSEARCH_BLOCKLIST || "[]"));
 
 export async function* search(
 	messages: Message[],

@@ -39,7 +39,7 @@
 					type = item.type;
 					menuState = 2;
 					selectedType = item.type;
-					displayList = jsonData.filter((x) => x.type === item.type);
+					displayList = jsonData.filter((x) => (("type" in x) && ("type" in item) && x.type === item.type));
 				}}
 			>
 				{item.title}
@@ -59,14 +59,27 @@
 		</div>
 		{#if selectedType}
 			{#each displayList as item}
-				<GenericForm
-					class="w-full px-3 py-3 hover:bg-gray-100 dark:hover:bg-gray-600"
-					sentence={item.title}
-					onclick={(msg) => {
-						message = msg;
-					}}
-					image_required={item.image_required}
-				/>
+				{#if "display" in item && item.display === true}
+					{#if "image_required" in item && item.image_required }
+						<GenericForm
+							class="w-full px-3 py-3 hover:bg-gray-100 dark:hover:bg-gray-600"
+							sentence={item.title}
+							onclick={(msg) => {
+								message = msg;
+							}}
+							image_required={item.image_required}
+						/>
+					{:else}
+						<div
+							class="w-full px-3 py-3 hover:bg-gray-100 dark:hover:bg-gray-600"
+							on:click={() => {
+								message = item.title;
+							}}
+						>
+							{item.title}
+						</div>
+					{/if}
+				{/if}
 			{/each}
 		{/if}
 	{/if}

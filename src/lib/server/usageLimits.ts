@@ -20,4 +20,4 @@ export const usageLimitsSchema = z
 	})
 	.optional();
 
-export const usageLimits = usageLimitsSchema.parse(JSON5.parse(env.USAGE_LIMITS));
+export const usageLimits = usageLimitsSchema.parse(JSON5.parse(env.USAGE_LIMITS || "{}"));

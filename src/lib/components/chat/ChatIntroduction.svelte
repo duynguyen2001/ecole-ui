@@ -37,13 +37,13 @@
 					v{envPublic.PUBLIC_VERSION}
 				</div>
 			</div>
-			<p class="text-base text-gray-600 dark:text-gray-400">
+			<p class="text-base italic text-gray-600 dark:text-gray-50">
 				{envPublic.PUBLIC_APP_DESCRIPTION ||
 					"Making the community's best AI chat models available to everyone."}
 			</p>
 		</div>
 	</div>
-	<div class="lg:col-span-2 lg:pl-24">
+	<div class="col-span-full w-full">
 		{#each announcementBanners as banner}
 			<AnnouncementBanner classNames="mb-4" title={banner.title}>
 				<a
@@ -53,7 +53,7 @@
 				>
 			</AnnouncementBanner>
 		{/each}
-		<div class="overflow-hidden rounded-xl border dark:border-gray-800">
+		<!-- <div class="overflow-hidden rounded-xl border dark:border-gray-800">
 			<div class="flex p-3">
 				<div>
 					<div class="text-sm text-gray-600 dark:text-gray-400">Current Model</div>
@@ -77,7 +77,7 @@
 				>
 			</div>
 			<ModelCardMetadata variant="dark" model={currentModel} />
-		</div>
+		</div> -->
 	</div>
 	{#if currentModelMetadata.promptExamples}
 		<div class="lg:col-span-3 lg:mt-6">

@@ -1,11 +1,9 @@
 <script>
 	import CarbonAdd from "~icons/carbon/add-alt";
 	import CarbonSubtract from "~icons/carbon/subtract-alt";
-	import CarbonSaveAnnotation from "~icons/carbon/save-annotation";
 	import CarbonDelete from "~icons/carbon/delete";
 	import CarbonUndo from "~icons/carbon/undo";
-	import CarbonDownload from "~icons/carbon/download";
-	import CarbonUpload from "~icons/carbon/upload";
+	import CarbonCheckmark from "~icons/carbon/checkmark";
 
 	// You can define functions to handle button clicks here
 	export let handleAdd = () => {
@@ -20,20 +18,15 @@
 		console.log("Remove clicked");
 	};
 
-	export let handleSave = () => {
-		console.log("Save clicked");
-	};
-
 	export let handleDelete = () => {
 		console.log("Delete clicked");
 	};
 
-	export let handleDownload = () => {
-		console.log("Download clicked");
+	export let handleSubmit = () => {
+		console.log("Submit clicked");
 	};
-	export let handleUpload = () => {
-		console.log("Upload clicked");
-	};
+
+	export let hasRegions = false;
 </script>
 
 <div>
@@ -57,32 +50,21 @@
 			Undo
 		</div>
 		<div class="button-group">
-			<button on:click={handleSave} class="flex items-center justify-center bg-green-500">
-				<CarbonSaveAnnotation />
-			</button>
-			Save
-		</div>
-
-		<div class="button-group">
 			<button on:click={handleDelete} class="flex items-center justify-center bg-red-500">
 				<CarbonDelete />
 			</button>
 			Delete
 		</div>
 
-		<!-- <br class="border" /> -->
-		<div class="button-group">
-			<button on:click={handleDownload} class="flex items-center justify-center bg-green-500">
-				<CarbonDownload />
+		<div class="button-group mt-4">
+			<button 
+				on:click={handleSubmit} 
+				disabled={!hasRegions}
+				class="flex items-center justify-center bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+			>
+				<CarbonCheckmark />
 			</button>
-			Download
-		</div>
-
-		<div class="button-group">
-			<button on:click={handleUpload} class="flex items-center justify-center bg-yellow-500">
-				<CarbonUpload />
-			</button>
-			Upload
+			Submit
 		</div>
 	</div>
 	<div />

@@ -3,7 +3,7 @@ import { env } from "$env/dynamic/private";
 
 export const GET: RequestHandler = async () => {
 	try {
-		const coordinatorURL = env.COORDINATOR_URL;
+		const coordinatorURL = env.COORDINATOR_URL_2;
 		console.log("coordinatorURL", coordinatorURL);
 		const response = await fetch(`${coordinatorURL}/commands`, {
 			method: "GET",

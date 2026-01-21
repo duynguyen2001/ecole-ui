@@ -30,4 +30,5 @@ export type MessageFile = {
 	name: string;
 	value: string;
 	mime: string;
+	size?: number;
 };

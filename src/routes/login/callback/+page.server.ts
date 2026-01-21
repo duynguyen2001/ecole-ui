@@ -10,7 +10,7 @@ const allowedUserEmails = z
 	.array(z.string().email())
 	.optional()
 	.default([])
-	.parse(JSON5.parse(env.ALLOWED_USER_EMAILS));
+	.parse(env.ALLOWED_USER_EMAILS ? JSON5.parse(env.ALLOWED_USER_EMAILS) : []);
 
 export async function load({ url, locals, cookies, request, getClientAddress }) {
 	const { error: errorName, error_description: errorDescription } = z

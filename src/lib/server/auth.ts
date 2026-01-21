@@ -18,11 +18,11 @@ export interface OIDCUserInfo {
 	userData: UserinfoResponse;
 }
 
-const stringWithDefault = (value: string) =>
+const stringWithDefault = (value: string | undefined) =>
 	z
 		.string()
-		.default(value)
-		.transform((el) => (el ? el : value));
+		.default(value || "")
+		.transform((el) => (el ? el : value || ""));
 
 export const OIDConfig = z
 	.object({
@@ -37,7 +37,7 @@ export const OIDConfig = z
 		TOLERANCE: stringWithDefault(env.OPENID_TOLERANCE),
 		RESOURCE: stringWithDefault(env.OPENID_RESOURCE),
 	})
-	.parse(JSON5.parse(env.OPENID_CONFIG));
+	.parse(JSON5.parse(env.OPENID_CONFIG || "{}"));
 
 export const requiresUser = !!OIDConfig.CLIENT_ID && !!OIDConfig.CLIENT_SECRET;
 

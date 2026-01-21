@@ -32,6 +32,7 @@
 	import Modal from "../Modal.svelte";
 	import OpenWebSearchResults from "../OpenWebSearchResults.svelte";
 	import ToolUpdate from "./ToolUpdate.svelte";
+	import SAMModal from "../SAMModal.svelte";
 
 	function sanitizeMd(md: string) {
 		let ret = md
@@ -71,6 +72,8 @@
 	const dispatch = createEventDispatcher<{
 		retry: { content?: string; id: Message["id"] };
 		vote: { score: Message["score"]; id: Message["id"] };
+		useRegion: { regions: any[]; imageFile: any; extractedFiles?: File[] };
+		imageFocus: { file: MessageFile; src: string; regions?: any[] };
 	}>();
 
 	let contentEl: HTMLElement;
@@ -91,6 +94,13 @@
 
 	renderer.link = (href, title, text) => {
 		return `<a href="${href?.replace(/>$/, "")}" target="_blank" rel="noreferrer">${text}</a>`;
+	};
+
+	// Custom image renderer to make markdown images clickable
+	renderer.image = (href, title, text) => {
+		return `<img src="${href}" alt="${text || ""}" title="${
+			title || ""
+		}" class="markdown-image cursor-pointer rounded-lg shadow-lg max-h-16" data-image-src="${href}" />`;
 	};
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -139,6 +149,30 @@
 					});
 				}
 			}, 600);
+		}
+
+		// Make markdown images clickable for focus panel
+		if (contentEl) {
+			const markdownImages = contentEl.querySelectorAll("img.markdown-image");
+			markdownImages.forEach((img) => {
+				// Remove any existing click handler to avoid duplicates
+				const newImg = img.cloneNode(true) as HTMLImageElement;
+				img.replaceWith(newImg);
+
+				newImg.addEventListener("click", (e) => {
+					e.stopPropagation();
+					const src = newImg.getAttribute("data-image-src") || newImg.src;
+					handleImageClick(
+						{
+							type: "hash",
+							name: newImg.alt || "Image",
+							value: src,
+							mime: "image/png",
+						},
+						src
+					);
+				});
+			});
 		}
 	});
 
@@ -213,31 +247,144 @@
 	$: if (message.children?.length === 0) $convTreeStore.leaf = message.id;
 
 	$: modalImageToShow = null as MessageFile | null;
+	$: showSAMModal = false;
+	$: samImageToShow = null as MessageFile | null;
+	$: samImageSrc = "";
 	$: console.log("modalImageToShow", modalImageToShow);
-	$: console.log("messages files", messages.map((m) => m.files));
+	$: console.log(
+		"messages files",
+		messages.map((m) => m.files)
+	);
+
+	function openSAMModal(file: MessageFile, src: string) {
+		samImageToShow = file;
+		samImageSrc = src;
+		showSAMModal = true;
+	}
+
+	async function handleUseRegion(
+		event: CustomEvent<{ regions: any[]; imageFile: any; extractedFiles?: File[] }>
+	) {
+		const { regions, imageFile, extractedFiles } = event.detail;
+		dispatch(
+			"useRegion",
+			event.detail as { regions: any[]; imageFile: any; extractedFiles?: File[] }
+		);
+
+		//save the file to temp.jpg
+		if (extractedFiles && extractedFiles.length > 0) {
+			const file = extractedFiles[0];
+			const url = URL.createObjectURL(file);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = "temp.jpg";
+			a.click();
+
+			URL.revokeObjectURL(url);
+		}
+		showSAMModal = false;
+	}
+
+	function handleImageClick(file: MessageFile, src: string) {
+		// Dispatch event to focus panel
+		dispatch("imageFocus", { file, src });
+		console.log("dispatching imageFocus", file, src);
+		// Also open the modal for full view
+		// modalImageToShow = file;
+		// highlight the image in the chat message, and remove highlight for other images
+		if (!contentEl) {
+			return;
+		}
+
+		const imageElements = contentEl.querySelectorAll("img");
+		imageElements.forEach((imageElement) => {
+			const imageSrc = imageElement.getAttribute("data-image-src") || imageElement.src;
+			if (imageSrc === src) {
+				imageElement.classList.add("border-2", "border-blue-500");
+			} else {
+				imageElement.classList.remove("border-2", "border-blue-500");
+			}
+		});
+	}
 </script>
 
-{#if modalImageToShow}
+{#if showSAMModal && samImageToShow}
+	<!-- SAM segmentation modal for region selection -->
+	<SAMModal
+		imageFile={samImageToShow}
+		imageSrc={samImageSrc}
+		on:close={() => {
+			showSAMModal = false;
+			samImageToShow = null;
+		}}
+		on:useRegion={handleUseRegion}
+	/>
+{:else if modalImageToShow}
 	<!-- show the image file full screen, click outside to exit -->
 	<Modal width="sm:max-w-[500px]" on:close={() => (modalImageToShow = null)}>
 		{#if modalImageToShow.type === "hash"}
-			<img
-				src={urlNotTrailing + "/output/" + modalImageToShow.value}
-				alt="input from user"
-				class="aspect-auto"
-			/>
+			<div class="relative">
+				<img
+					src={urlNotTrailing + "/output/" + modalImageToShow.value}
+					alt="input from user"
+					class="aspect-auto"
+					on:click={() => {
+						const src = urlNotTrailing + "/output/" + modalImageToShow.value;
+						const file = modalImageToShow;
+						handleImageClick(file, src);
+						modalImageToShow = null;
+					}}
+				/>
+				<button
+					on:click={() => {
+						const src = urlNotTrailing + "/output/" + modalImageToShow.value;
+						modalImageToShow && openSAMModal(modalImageToShow, src);
+						modalImageToShow = null;
+					}}
+					class="absolute bottom-4 right-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+				>
+					Select Region
+				</button>
+			</div>
 		{:else if modalImageToShow.type === "video"}
-			<video class="aspect-auto" controls>
+			<video
+				class="aspect-auto"
+				controls
+				on:click={() => {
+					const src = "/videos/" + modalImageToShow.value;
+					const file = modalImageToShow;
+					handleImageClick(file, src);
+					modalImageToShow = null;
+				}}
+			>
 				<source src={"/videos/" + modalImageToShow.value} type={modalImageToShow.mime} />
 				<track kind="captions" />
 			</video>
 		{:else}
 			<!-- handle the case where this is a base64 encoded image -->
-			<img
-				src={`data:${modalImageToShow.mime};base64,${modalImageToShow.value}`}
-				alt="input from user"
-				class="aspect-auto"
-			/>
+			<div class="relative">
+				<img
+					src={`data:${modalImageToShow.mime};base64,${modalImageToShow.value}`}
+					alt="input from user"
+					class="aspect-auto"
+					on:click={() => {
+						const src = `data:${modalImageToShow.mime};base64,${modalImageToShow.value}`;
+						const file = modalImageToShow;
+						handleImageClick(file, src);
+						modalImageToShow = null;
+					}}
+				/>
+				<button
+					on:click={() => {
+						const src = `data:${modalImageToShow.mime};base64,${modalImageToShow.value}`;
+						modalImageToShow && openSAMModal(modalImageToShow, src);
+						modalImageToShow = null;
+					}}
+					class="absolute bottom-4 right-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+				>
+					Select Region
+				</button>
+			</div>
 		{/if}
 	</Modal>
 {/if}
@@ -260,6 +407,15 @@
 				alt=""
 				src="https://huggingface.co/avatars/2edb18bd0206c16b433841a47f53fa8e.svg"
 				class="mt-5 h-3 w-3 flex-none select-none rounded-full shadow-lg"
+				on:click={() => {
+					const src = "https://huggingface.co/avatars/2edb18bd0206c16b433841a47f53fa8e.svg";
+					const file = {
+						type: "hash",
+						name: "Avatar",
+						value: "https://huggingface.co/avatars/2edb18bd0206c16b433841a47f53fa8e.svg",
+					};
+					handleImageClick(file, src);
+				}}
 			/>
 		{/if}
 		<div
@@ -269,7 +425,18 @@
 				<div class="flex h-fit flex-wrap gap-x-5 gap-y-2">
 					{#each message.files as file}
 						<!-- handle the case where this is a hash that points to an image in the db, hash is always 64 char long -->
-						<button on:click={() => (modalImageToShow = file)}>
+						<button
+							on:click={(e) => {
+								e.stopPropagation();
+								const src =
+									file.type === "hash"
+										? urlNotTrailing + "/output/" + file.value
+										: file.type === "video"
+										? "/videos/" + file.value
+										: `data:${file.mime};base64,${file.value}`;
+								handleImageClick(file, src);
+							}}
+						>
 							{#if file.type === "hash"}
 								<img
 									src={urlNotTrailing + "/output/" + file.value}
@@ -280,6 +447,11 @@
 								<video
 									class="my-2 aspect-auto max-h-48 cursor-pointer rounded-lg shadow-lg xl:max-h-56"
 									controls
+									on:click={(e) => {
+										e.stopPropagation();
+										const src = "/videos/" + file.value;
+										handleImageClick(file, src);
+									}}
 								>
 									<source src={"/videos/" + file.value} type={file.mime} />
 									<track kind="captions" />
@@ -414,11 +586,25 @@
 				<div class="flex w-fit gap-4 px-5">
 					{#each message.files as file}
 						{#if file.mime.startsWith("image/")}
-							<button on:click={() => (modalImageToShow = file)}>
+							<button
+								on:click={() => {
+									const src =
+										file.type === "hash"
+											? urlNotTrailing + "/output/" + file.value
+											: `data:${file.mime};base64,${file.value}`;
+									handleImageClick(file, src);
+								}}
+							>
 								<UploadedFile {file} canClose={false} />
 							</button>
 						{:else if file.mime.startsWith("video/")}
-							<button on:click={() => (modalImageToShow = file)}>
+							<button
+								on:click={() => {
+									const src = "/videos/" + file.value;
+									const file = file;
+									handleImageClick(file, src);
+								}}
+							>
 								<UploadedFile {file} canClose={false} />
 							</button>
 						{:else}
@@ -527,6 +713,7 @@
 		on:retry
 		on:vote
 		on:continue
+		on:imageFocus
 	>
 		<svelte:fragment slot="childrenNav">
 			{#if nChildren > 1 && $convTreeStore.editing === null}

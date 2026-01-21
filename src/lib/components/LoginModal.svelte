@@ -55,7 +55,7 @@
 						$settings.ethicsModalAccepted = true;
 					}}
 				>
-					Start chatting
+					Start Interaction With MIRACLE System
 				</button>
 			{/if}
 		</form>

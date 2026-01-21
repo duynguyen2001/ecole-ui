@@ -65,11 +65,15 @@
 		stop: void;
 		retry: { id: Message["id"]; content?: string };
 		continue: { id: Message["id"] };
+		useRegion: { regions: any[]; imageFile: any; extractedFiles?: File[] };
+		imageFocus: { file: MessageFile; src: string; regions?: any[] };
 	}>();
 
 	const handleSubmit = () => {
 		if (loading) return;
 		dispatch("message", message);
+
+		//
 		message = "";
 		helpBoxModalOpen = false;
 	};
@@ -207,6 +211,10 @@
 	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
 	};
+	const handleImageFocus = (e: CustomEvent<{ file: MessageFile; src: string }>) => {
+		console.log("imageFocus runned in ChatWindow", e.detail);
+		dispatch("imageFocus", e.detail);
+	};
 
 	onMount(() => {
 		if (typeof window !== "undefined") {
@@ -220,17 +228,17 @@
 	// Clean up event listeners on component destroy
 	onDestroy(() => {
 		if (typeof window !== "undefined") {
-			window.addEventListener("dragenter", onDragEnter);
-			window.addEventListener("drop", onDragDrop);
-			window.addEventListener("dragover", onDragOver);
-			window.addEventListener("dragleave", onDragLeave);
+			window.removeEventListener("dragenter", onDragEnter);
+			window.removeEventListener("drop", onDragDrop);
+			window.removeEventListener("dragover", onDragOver);
+			window.removeEventListener("dragleave", onDragLeave);
 		}
 	});
 
 	let DropZone: SvelteComponent;
 </script>
 
-<div class="relative min-h-0 min-w-0">
+<div class="relative min-h-0 w-full min-w-0">
 	{#if loginModalOpen}
 		<LoginModal
 			on:close={() => {
@@ -269,7 +277,7 @@
 						/>
 					{:else}
 						<div
-							class="size-6 flex items-center justify-center rounded-full bg-gray-300 font-bold uppercase text-gray-500"
+							class="flex size-6 items-center justify-center rounded-full bg-gray-300 font-bold uppercase text-gray-500"
 						>
 							{$page.data?.assistant.name[0]}
 						</div>
@@ -293,6 +301,16 @@
 						on:retry
 						on:vote
 						on:continue
+						on:imageFocus={handleImageFocus}
+						on:useRegion={(e) => {
+							// Add extracted files to the dropzone
+							console.log("useRegion", e.detail);
+							if (e.detail.extractedFiles && e.detail.extractedFiles.length > 0) {
+								files = [...files, ...e.detail.extractedFiles];
+							}
+							// Also dispatch to parent if needed
+							dispatch("useRegion", e.detail);
+						}}
 					/>
 				</div>
 			{:else if pending}
@@ -310,6 +328,10 @@
 					isAuthor={!shared}
 					readOnly={isReadOnly}
 					model={currentModel}
+					on:imageFocus={(e) => {
+						console.log("imageFocus runned in ChatWindow", e.detail);
+						dispatch("imageFocus", e.detail);
+					}}
 				/>
 			{:else if !assistant}
 				<ChatIntroduction
@@ -345,7 +367,7 @@
 		/>
 	</div>
 	<div
-		class="dark:via-gray-80 pointer-events-none absolute inset-x-0 bottom-0 z-0 mx-auto flex w-full max-w-3xl flex-col items-center justify-center bg-gradient-to-t from-white via-white/80 to-white/0 px-3.5 py-4 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/0 max-md:border-t max-md:bg-white max-md:dark:bg-gray-900 sm:px-5 md:py-8 xl:max-w-4xl [&>*]:pointer-events-auto"
+		class="dark:via-gray-80 pointer-events-none absolute inset-x-0 bottom-0 z-0 mx-auto flex w-full max-w-3xl flex-col items-center justify-center bg-gradient-to-t from-white via-white/80 to-white/0 px-3.5 py-4 max-md:border-t max-md:bg-white sm:px-5 md:py-8 xl:max-w-4xl dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/0 max-md:dark:bg-gray-900 [&>*]:pointer-events-auto"
 	>
 		{#if sources?.length}
 			<div class="flex flex-row flex-wrap justify-center gap-2.5 max-md:pb-3">
@@ -355,6 +377,9 @@
 							file={src}
 							on:close={() => {
 								files = files.filter((_, i) => i !== index);
+							}}
+							on:click={() => {
+								dispatch("imageFocus", { file: src, src: src.src });
 							}}
 						/>
 					{/await}
@@ -443,19 +468,19 @@
 
 						{#if loading}
 							<button
-								class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:hidden"
+								class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 disabled:opacity-60 enabled:hover:text-gray-700 md:hidden dark:disabled:opacity-40 enabled:dark:hover:text-gray-100"
 								on:click={() => dispatch("stop")}
 							>
 								<CarbonStopFilledAlt />
 							</button>
 							<div
-								class="mx-1 my-1 hidden h-[2.4rem] items-center p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:flex"
+								class="mx-1 my-1 hidden h-[2.4rem] items-center p-1 px-[0.7rem] text-gray-400 disabled:opacity-60 enabled:hover:text-gray-700 md:flex dark:disabled:opacity-40 enabled:dark:hover:text-gray-100"
 							>
 								<EosIconsLoading />
 							</div>
 						{:else}
 							<button
-								class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
+								class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 disabled:opacity-60 enabled:hover:text-gray-700 dark:disabled:opacity-40 enabled:dark:hover:text-gray-100"
 								disabled={!message || isReadOnly}
 								type="submit"
 							>

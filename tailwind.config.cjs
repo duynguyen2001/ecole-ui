@@ -12,8 +12,8 @@ export default {
 				primary: colors[process.env.PUBLIC_APP_COLOR],
 			},
 			fontSize: {
-				xxs: "0.625rem",
-				smd: "0.94rem",
+				xxs: "0.75rem",    // Increased from 0.625rem
+				smd: "1.06rem",    // Increased from 0.94rem
 			},
 		},
 	},

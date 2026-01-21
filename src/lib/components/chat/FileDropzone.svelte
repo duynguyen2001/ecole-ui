@@ -41,11 +41,11 @@
 						}
 
 						// if file is bigger than 10MB abort
-						if (file.size > 10 * 1024 * 1024) {
-							setErrorMsg("Image is too big. (2MB max)");
-							files = [];
-							return;
-						}
+						// if (file.size > 10 * 1024 * 1024) {
+						// 	setErrorMsg("Image is too big. (2MB max)");
+						// 	files = [];
+						// 	return;
+						// }
 					tempFiles.push(file);
 					}
 					files = tempFiles;

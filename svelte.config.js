@@ -7,6 +7,11 @@ dotenv.config({ path: "./.env" });
 
 process.env.PUBLIC_VERSION ??= process.env.npm_package_version;
 
+// Clean up APP_BASE to ensure it's valid for SvelteKit
+const APP_BASE = process.env.APP_BASE || "";
+const cleanBase = APP_BASE.trim().replace(/\/$/, "");
+const validBase = cleanBase === "" || cleanBase.startsWith("/") ? cleanBase : "";
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
@@ -17,7 +22,7 @@ const config = {
 		adapter: adapter(),
 
 		paths: {
-			base: process.env.APP_BASE || "",
+			base: validBase,
 		},
 		csrf: {
 			// handled in hooks.server.ts, because we can have multiple valid origins

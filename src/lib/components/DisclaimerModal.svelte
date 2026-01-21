@@ -46,7 +46,7 @@
 					{#if $page.data.loginEnabled}
 						Try as guest
 					{:else}
-						Start chatting
+						Start Interaction With MIRACLE System
 					{/if}
 				</button>
 			{/if}

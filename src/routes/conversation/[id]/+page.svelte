@@ -3,6 +3,7 @@
 	import { base } from "$app/paths";
 	import { page } from "$app/stores";
 	import ChatWindow from "$lib/components/chat/ChatWindow.svelte";
+	import ImageFocusPanel from "$lib/components/ImageFocusPanel.svelte";
 	import { shareConversation } from "$lib/shareConversation";
 	import { createConvTreeStore } from "$lib/stores/convTree";
 	import { ERROR_MESSAGES, error } from "$lib/stores/errors";
@@ -11,7 +12,7 @@
 	import { useSettingsStore } from "$lib/stores/settings.js";
 	import titleUpdate from "$lib/stores/titleUpdate";
 	import { webSearchParameters } from "$lib/stores/webSearchParameters";
-	import type { Message } from "$lib/types/Message";
+	import type { Message, MessageFile } from "$lib/types/Message";
 	import {
 		MessageUpdateStatus,
 		MessageUpdateType,
@@ -34,6 +35,7 @@
 	let pending = false;
 
 	let files: File[] = [];
+	let focusedImage: { file: MessageFile; src: string; regions?: any[] } | null = null;
 
 	async function convFromShared() {
 		try {
@@ -413,6 +415,74 @@
 
 	const convTreeStore = createConvTreeStore();
 	const settings = useSettingsStore();
+
+	let selectedRegions: any[] = [];
+
+	function onUseRegion(event: CustomEvent) {
+		const { regions, imageFile, extractedFiles } = event.detail;
+		selectedRegions = regions;
+
+		// Create a prompt with region information
+		const regionInfo = regions
+			.map(
+				(r: any, i: number) =>
+					`Region ${i + 1}: ${r.name}${r.description ? " - " + r.description : ""}`
+			)
+			.join("\n");
+
+		// Add extracted region images to the files array for the next message
+		if (extractedFiles && extractedFiles.length > 0) {
+			files = [...files, ...extractedFiles];
+			console.log(`✅ Added ${extractedFiles.length} segmented region(s) to chat`);
+
+			// Set a prompt suggesting analysis
+			pendingMessage.set({
+				content: `Analyze these ${extractedFiles.length} segmented region(s) from the image:\n\n${regionInfo}\n\nWhat can you tell me about these areas?`,
+				files: extractedFiles,
+			});
+		} else {
+			// Fallback if no extracted files
+			console.log("Selected regions:", regionInfo);
+			pendingMessage.set({
+				content: `Analyze these regions in the image:\n\n${regionInfo}\n\nWhat can you tell me about these selected areas?`,
+				files: [],
+			});
+		}
+	}
+
+	// Handle image focus when clicked or sent
+	function handleImageFocus(
+		event: CustomEvent<{ file: MessageFile; src: string; regions?: any[] }>
+	) {
+		console.log("🎯 handleImageFocus called in +page.svelte", event.detail);
+		const { file, src, regions } = event.detail;
+		focusedImage = { file, src, regions };
+		console.log("🎯 focusedImage set to:", focusedImage);
+	}
+
+	// Update focused image when files are added
+	$: if (files.length > 0) {
+		const lastFile = files[files.length - 1];
+		if (lastFile.type?.startsWith("image/")) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const result = e.target?.result as string;
+				// Extract base64 data from data URL
+				const base64Data = result.split(",")[1] || "";
+				focusedImage = {
+					file: {
+						type: "base64",
+						name: lastFile.name,
+						mime: lastFile.type,
+						value: base64Data,
+						size: lastFile.size,
+					} as MessageFile,
+					src: result,
+				};
+			};
+			reader.readAsDataURL(lastFile);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -425,20 +495,32 @@
 	/>
 </svelte:head>
 
-<ChatWindow
-	{loading}
-	{pending}
-	{messages}
-	shared={data.shared}
-	preprompt={data.preprompt}
-	bind:files
-	on:message={onMessage}
-	on:retry={onRetry}
-	on:continue={onContinue}
-	on:vote={(event) => voteMessage(event.detail.score, event.detail.id)}
-	on:share={() => shareConversation($page.params.id, data.title)}
-	on:stop={() => (($isAborted = true), (loading = false))}
-	models={data.models}
-	currentModel={findCurrentModel([...data.models, ...data.oldModels], data.model)}
-	assistant={data.assistant}
-/>
+<div class="flex h-screen w-full">
+	<!-- Main Chat Window (Left Side) - 50% width -->
+	<div class="flex h-full w-1/2">
+		<ChatWindow
+			{loading}
+			{pending}
+			{messages}
+			shared={data.shared}
+			preprompt={data.preprompt}
+			bind:files
+			on:message={onMessage}
+			on:retry={onRetry}
+			on:continue={onContinue}
+			on:imageFocus={handleImageFocus}
+			on:vote={(event) => voteMessage(event.detail.score, event.detail.id)}
+			on:share={() => shareConversation($page.params.id, data.title)}
+			on:stop={() => (($isAborted = true), (loading = false))}
+			on:useRegion={onUseRegion}
+			models={data.models}
+			currentModel={findCurrentModel([...data.models, ...data.oldModels], data.model)}
+			assistant={data.assistant}
+		/>
+	</div>
+
+	<!-- Image Focus Panel (Right Side) - 50% width -->
+	<div class="w-1/2">
+		<ImageFocusPanel bind:focusedImage />
+	</div>
+</div>
